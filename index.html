@@ -491,13 +491,64 @@
       const progress = next ? Math.min(1, Math.max(0, (count - current.min) / (next.min - current.min))) : 1;
       return { index: idx, current, next, progress: isNaN(progress) ? 0 : progress };
     }
-    function speakGerman(text, slow = false) {
+    let germanVoice = null;
+    function loadGermanVoice() {
       if ("speechSynthesis" in window) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = "de-DE";
-        utterance.rate = slow ? 0.6 : 1.0;
-        window.speechSynthesis.speak(utterance);
+        const voices = window.speechSynthesis.getVoices();
+        germanVoice = voices.find((v) => v.lang === "de-DE" || v.lang.startsWith("de")) || null;
+      }
+    }
+    if ("speechSynthesis" in window) {
+      loadGermanVoice();
+      if (window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = loadGermanVoice;
+      }
+    }
+
+    function fallbackAudioTTS(text) {
+      try {
+        const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=de&client=tw-ob&q=${encodeURIComponent(text)}`;
+        const audio = new Audio(url);
+        audio.play().catch(() => {});
+      } catch (err) {}
+    }
+
+    function speakGerman(text, slow = false) {
+      if (!text || !text.trim()) return;
+      const cleanText = text.trim();
+
+      if ("speechSynthesis" in window) {
+        try {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(cleanText);
+          utterance.lang = "de-DE";
+          utterance.rate = slow ? 0.6 : 0.9;
+
+          if (!germanVoice) loadGermanVoice();
+          if (germanVoice) utterance.voice = germanVoice;
+
+          if (window.speechSynthesis.paused) {
+            window.speechSynthesis.resume();
+          }
+
+          let spoken = false;
+          utterance.onstart = () => { spoken = true; };
+          utterance.onerror = () => {
+            if (!spoken) fallbackAudioTTS(cleanText);
+          };
+
+          window.speechSynthesis.speak(utterance);
+
+          setTimeout(() => {
+            if (!window.speechSynthesis.speaking && !spoken) {
+              fallbackAudioTTS(cleanText);
+            }
+          }, 350);
+        } catch (e) {
+          fallbackAudioTTS(cleanText);
+        }
+      } else {
+        fallbackAudioTTS(cleanText);
       }
     }
     function createInitialData() {
