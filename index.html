@@ -253,6 +253,186 @@
       ["besuchen", "to visit", null, "Actions"],
     ];
 
+    /* ============================================================
+       CURATED 20 DAILY SPOTLIGHT & GRAMMAR DATA
+       ============================================================ */
+    const CURATED_SPOTLIGHT_20 = [
+      { id: "sp_1", german: "haben", article: "", english: "to have (have / has)", example: "Ich habe Zeit und du hast Glück.", exampleEn: "I have time and you are lucky.", category: "Grammar", level: "A1", notes: "ich habe, du hast, er/sie/es hat, wir haben, ihr habt, sie haben" },
+      { id: "sp_2", german: "sein", article: "", english: "to be (am / is / are)", example: "Er ist zu Hause und wir sind im Park.", exampleEn: "He is at home and we are in the park.", category: "Grammar", level: "A1", notes: "ich bin, du bist, er/sie/es ist, wir sind, ihr seid, sie sind" },
+      { id: "sp_3", german: "Entschuldigung", article: "die", english: "excuse me / apology", example: "Entschuldigung, wo ist der Bahnhof?", exampleEn: "Excuse me, where is the train station?", category: "Greetings", level: "A1", notes: "Used to apologize or politely get attention" },
+      { id: "sp_4", german: "Geschwindigkeit", article: "die", english: "speed / velocity", example: "Die Geschwindigkeit ist sehr hoch.", exampleEn: "The speed is very high.", category: "Directions", level: "A2", notes: "Nouns ending in -keit are feminine (die)" },
+      { id: "sp_5", german: "Krankenhaus", article: "das", english: "hospital", example: "Er arbeitet in einem Krankenhaus.", exampleEn: "He works in a hospital.", category: "Jobs", level: "A1", notes: "Krank (sick) + Haus (house)" },
+      { id: "sp_6", german: "Wörterbuch", article: "das", english: "dictionary", example: "Ich brauche ein Wörterbuch für Deutsch.", exampleEn: "I need a dictionary for German.", category: "School", level: "A1", notes: "Wörter (words) + Buch (book)" },
+      { id: "sp_7", german: "Frühstück", article: "das", english: "breakfast", example: "Zum Frühstück esse ich Brot und Käse.", exampleEn: "For breakfast I eat bread and cheese.", category: "Food", level: "A1", notes: "Früh (early) + Stück (piece)" },
+      { id: "sp_8", german: "Wohnzimmer", article: "das", english: "living room", example: "Das Wohnzimmer ist schön und hell.", exampleEn: "The living room is nice and bright.", category: "Family", level: "A1", notes: "Wohnen (live) + Zimmer (room)" },
+      { id: "sp_9", german: "Entscheidung", article: "die", english: "decision", example: "Das ist eine wichtige Entscheidung.", exampleEn: "That is an important decision.", category: "Grammar", level: "A2", notes: "Nouns ending in -ung are always feminine (die)" },
+      { id: "sp_10", german: "Unterschied", article: "der", english: "difference", example: "Was ist der Unterschied zwischen wo und wohin?", exampleEn: "What is the difference between where and where to?", category: "Grammar", level: "A2", notes: "Unter (under) + Schied" },
+      { id: "sp_11", german: "Verständnis", article: "das", english: "understanding / comprehension", example: "Vielen Dank für Ihr Verständnis.", exampleEn: "Thank you very much for your understanding.", category: "School", level: "A2", notes: "Verstehen (to understand)" },
+      { id: "sp_12", german: "Herausforderung", article: "die", english: "challenge", example: "Deutsch lernen ist eine tolle Herausforderung.", exampleEn: "Learning German is a great challenge.", category: "School", level: "A2", notes: "Heraus + Forderung (-ung -> die)" },
+      { id: "sp_13", german: "Möglichkeit", article: "die", english: "possibility / opportunity", example: "Gibt es eine Möglichkeit zu helfen?", exampleEn: "Is there an opportunity to help?", category: "Grammar", level: "A2", notes: "Möglich (possible) + -keit" },
+      { id: "sp_14", german: "Verantwortung", article: "die", english: "responsibility", example: "Er trägt viel Verantwortung im Beruf.", exampleEn: "He carries a lot of responsibility at work.", category: "Jobs", level: "A2", notes: "Antwort (answer/response)" },
+      { id: "sp_15", german: "Sehenswürdigkeit", article: "die", english: "tourist attraction / sight", example: "Berlin hat viele Sehenswürdigkeiten.", exampleEn: "Berlin has many tourist attractions.", category: "Travel", level: "A2", notes: "Sehen (see) + würdig (worthy)" },
+      { id: "sp_16", german: "Zusammenarbeit", article: "die", english: "cooperation / collaboration", example: "Danke für die gute Zusammenarbeit.", exampleEn: "Thank you for the good collaboration.", category: "Jobs", level: "A2", notes: "Zusammen (together) + Arbeit (work)" },
+      { id: "sp_17", german: "Flughafen", article: "der", english: "airport", example: "Wir fahren jetzt zum Flughafen.", exampleEn: "We are driving to the airport now.", category: "Travel", level: "A1", notes: "Flug (flight) + Hafen (port)" },
+      { id: "sp_18", german: "Rechtsanwalt", article: "der", english: "lawyer (m)", example: "Der Rechtsanwalt hilft dem Kunden.", exampleEn: "The lawyer helps the client.", category: "Jobs", level: "A2", notes: "Recht (law) + Anwalt (attorney)" },
+      { id: "sp_19", german: "Wissenschaft", article: "die", english: "science", example: "Wissenschaft ist sehr spannend.", exampleEn: "Science is very exciting.", category: "School", level: "A2", notes: "Wissen (knowledge) + -schaft" },
+      { id: "sp_20", german: "Bedeutung", article: "die", english: "meaning / significance", example: "Was ist die Bedeutung von diesem Satz?", exampleEn: "What is the meaning of this sentence?", category: "School", level: "A1", notes: "Bedeuten (to mean)" }
+    ];
+
+    const VERB_CONJUGATIONS = [
+      {
+        verb: "haben", english: "to have (have / has)",
+        note: "Essential verb! Used for possession and making past tense sentences (e.g. Ich habe gegessen).",
+        forms: [
+          { pronoun: "ich", form: "habe", en: "I have", ex: "Ich habe ein Buch.", exEn: "I have a book." },
+          { pronoun: "du", form: "hast", en: "you have (inf)", ex: "Du hast Zeit.", exEn: "You have time." },
+          { pronoun: "er/sie/es", form: "hat", en: "he/she/it has", ex: "Er hat einen Hund.", exEn: "He has a dog." },
+          { pronoun: "wir", form: "haben", en: "we have", ex: "Wir haben Hunger.", exEn: "We are hungry." },
+          { pronoun: "ihr", form: "habt", en: "you all have", ex: "Ihr habt recht.", exEn: "You all are right." },
+          { pronoun: "sie/Sie", form: "haben", en: "they / You have", ex: "Sie haben zwei Kinder.", exEn: "They / You have two children." }
+        ]
+      },
+      {
+        verb: "sein", english: "to be (am / is / are)",
+        note: "Irregular verb! Essential for introductions, feelings, locations & movement.",
+        forms: [
+          { pronoun: "ich", form: "bin", en: "I am", ex: "Ich bin Ahmed.", exEn: "I am Ahmed." },
+          { pronoun: "du", form: "bist", en: "you are (inf)", ex: "Wo bist du?", exEn: "Where are you?" },
+          { pronoun: "er/sie/es", form: "ist", en: "he/she/it is", ex: "Das ist wunderbar.", exEn: "That is wonderful." },
+          { pronoun: "wir", form: "sind", en: "we are", ex: "Wir sind zu Hause.", exEn: "We are at home." },
+          { pronoun: "ihr", form: "seid", en: "you all are", ex: "Ihr seid sehr nett.", exEn: "You all are very nice." },
+          { pronoun: "sie/Sie", form: "sind", en: "they / You are", ex: "Sind Sie Herr Müller?", exEn: "Are you Mr. Müller?" }
+        ]
+      },
+      {
+        verb: "können", english: "to be able to / can",
+        note: "Modal verb! Expresses ability or permission. The second verb goes to the end of sentence.",
+        forms: [
+          { pronoun: "ich", form: "kann", en: "I can", ex: "Ich kann Deutsch sprechen.", exEn: "I can speak German." },
+          { pronoun: "du", form: "kannst", en: "you can", ex: "Kannst du mir helfen?", exEn: "Can you help me?" },
+          { pronoun: "er/sie/es", form: "kann", en: "he/she/it can", ex: "Er kann gut kochen.", exEn: "He can cook well." },
+          { pronoun: "wir", form: "können", en: "we can", ex: "Wir können morgen kommen.", exEn: "We can come tomorrow." },
+          { pronoun: "ihr", form: "könnt", en: "you all can", ex: "Könnt ihr das sehen?", exEn: "Can you all see that?" },
+          { pronoun: "sie/Sie", form: "können", en: "they / You can", ex: "Sie können hier sitzen.", exEn: "You can sit here." }
+        ]
+      },
+      {
+        verb: "gehen", english: "to go / walk",
+        note: "Standard regular verb endings (-e, -st, -t, -en, -t, -en). Used for movement.",
+        forms: [
+          { pronoun: "ich", form: "gehe", en: "I go", ex: "Ich gehe nach Hause.", exEn: "I am going home." },
+          { pronoun: "du", form: "gehst", en: "you go", ex: "Gehst du in den Park?", exEn: "Are you going to the park?" },
+          { pronoun: "er/sie/es", form: "geht", en: "he/she/it goes", ex: "Wie geht es dir?", exEn: "How are you?" },
+          { pronoun: "wir", form: "gehen", en: "we go", ex: "Wir gehen ins Kino.", exEn: "We are going to the cinema." },
+          { pronoun: "ihr", form: "geht", en: "you all go", ex: "Ihr geht schnell.", exEn: "You all walk fast." },
+          { pronoun: "sie/Sie", form: "gehen", en: "they / You go", ex: "Sie gehen jetzt.", exEn: "They are leaving now." }
+        ]
+      },
+      {
+        verb: "machen", english: "to do / make",
+        note: "Very useful verb! Used for activities, hobbies, homework, and making things.",
+        forms: [
+          { pronoun: "ich", form: "mache", en: "I do / make", ex: "Ich mache Hausaufgaben.", exEn: "I do homework." },
+          { pronoun: "du", form: "machst", en: "you do / make", ex: "Was machst du heute?", exEn: "What are you doing today?" },
+          { pronoun: "er/sie/es", form: "macht", en: "he/she/it does", ex: "Das macht Spaß!", exEn: "That is fun!" },
+          { pronoun: "wir", form: "machen", en: "we do / make", ex: "Wir machen eine Pause.", exEn: "We are taking a break." },
+          { pronoun: "ihr", form: "macht", en: "you all do", ex: "Ihr macht das super.", exEn: "You all are doing great." },
+          { pronoun: "sie/Sie", form: "machen", en: "they / You do", ex: "Sie machen Sport.", exEn: "They do sports." }
+        ]
+      },
+      {
+        verb: "wohnen", english: "to live / reside",
+        note: "Regular verb used to tell where you live. Paired with preposition 'in'.",
+        forms: [
+          { pronoun: "ich", form: "wohne", en: "I live", ex: "Ich wohne in Berlin.", exEn: "I live in Berlin." },
+          { pronoun: "du", form: "wohnst", en: "you live", ex: "Wo wohnst du?", exEn: "Where do you live?" },
+          { pronoun: "er/sie/es", form: "wohnt", en: "he/she/it lives", ex: "Er wohnt in einem Haus.", exEn: "He lives in a house." },
+          { pronoun: "wir", form: "wohnen", en: "we live", ex: "Wir wohnen zusammen.", exEn: "We live together." },
+          { pronoun: "ihr", form: "wohnt", en: "you all live", ex: "Wohnt ihr hier?", exEn: "Do you all live here?" },
+          { pronoun: "sie/Sie", form: "wohnen", en: "they / You live", ex: "Sie wohnen in Deutschland.", exEn: "They live in Germany." }
+        ]
+      }
+    ];
+
+    const QUESTION_WORDS = [
+      { de: "wo", en: "where (location)", tip: "Asks for fixed location. Answer uses 'in', 'an', 'auf'.", ex: "Wo ist die Toilette?", exEn: "Where is the restroom?" },
+      { de: "wohin", en: "where to (direction)", tip: "Asks for destination or direction. Uses accusative movement.", ex: "Wohin fährst du?", exEn: "Where are you driving to?" },
+      { de: "woher", en: "where from (origin)", tip: "Asks for origin. Answer uses 'aus' (from).", ex: "Woher kommst du?", exEn: "Where do you come from?" },
+      { de: "wie", en: "how / what", tip: "Asks for manner, condition, or name (Wie heißt du?).", ex: "Wie geht es dir?", exEn: "How are you?" },
+      { de: "was", en: "what", tip: "Asks for objects, actions, or information.", ex: "Was ist das?", exEn: "What is that?" },
+      { de: "warum", en: "why", tip: "Asks for reasons. Answer starts with 'weil' (because).", ex: "Warum lernst du Deutsch?", exEn: "Why are you learning German?" },
+      { de: "wer", en: "who", tip: "Asks for a person (subject).", ex: "Wer ist der Mann?", exEn: "Who is the man?" },
+      { de: "wann", en: "when", tip: "Asks for time, day, or date.", ex: "Wann kommt der Bus?", exEn: "When is the bus coming?" }
+    ];
+
+    function get20DailySpotlightWords(userVocab = []) {
+      const pool = [...userVocab];
+      pool.sort((a, b) => {
+        const diffA = (a.incorrectCount || 0) - (a.correctCount || 0);
+        const diffB = (b.incorrectCount || 0) - (b.correctCount || 0);
+        if (diffA !== diffB) return diffB - diffA;
+        return a.dateAdded < b.dateAdded ? 1 : -1;
+      });
+
+      const selected = [];
+      const seen = new Set();
+
+      for (const w of pool) {
+        const norm = (w.german || "").toLowerCase().trim();
+        if (!seen.has(norm)) {
+          seen.add(norm);
+          selected.push(w);
+        }
+        if (selected.length >= 20) break;
+      }
+
+      if (selected.length < 20) {
+        for (const c of CURATED_SPOTLIGHT_20) {
+          const norm = c.german.toLowerCase().trim();
+          if (!seen.has(norm)) {
+            seen.add(norm);
+            selected.push(c);
+          }
+          if (selected.length >= 20) break;
+        }
+      }
+      return selected.slice(0, 20);
+    }
+
+    async function enrichWordWithAI(wordId, german, english, setData) {
+      try {
+        const system = "You are an expert German teacher. Respond with ONLY a valid raw JSON object with no markdown formatting or extra text.";
+        const prompt = `Return a JSON object for German word "${german}" (meaning: "${english}") with exact keys:
+"article": "der" or "die" or "das" or "" (empty if verb/adj),
+"plural": "plural form or empty",
+"category": "Greetings" or "Family" or "Jobs" or "Grammar" or "Food" or "Drinks" or "Directions" or "Sports" or "Feelings" or "Animals" or "Party" or "Time" or "School" or "Travel" or "Actions",
+"level": "A1" or "A2",
+"example": "Short A1 German example sentence using this word",
+"exampleEn": "English translation of example sentence",
+"notes": "Short mnemonic or grammar usage tip"`;
+
+        const resText = await claudeMessages([{ role: "user", content: prompt }], system, 350);
+        const parsed = JSON.parse(resText.replace(/^```json/i, "").replace(/^```/, "").replace(/```$/, "").trim());
+        if (parsed && (parsed.example || parsed.article || parsed.category)) {
+          setData((prev) => ({
+            ...prev,
+            vocab: prev.vocab.map((w) => (w.id === wordId ? {
+              ...w,
+              article: parsed.article !== undefined ? parsed.article : w.article,
+              plural: parsed.plural || w.plural,
+              category: parsed.category || w.category || "Actions",
+              level: parsed.level || w.level || "A1",
+              example: parsed.example || w.example,
+              exampleEn: parsed.exampleEn || w.exampleEn,
+              notes: parsed.notes || w.notes,
+            } : w))
+          }));
+        }
+      } catch (e) {
+        // Fallback already in place
+      }
+    }
+
     const BADGE_DEFS = [
       { id: "first-word", label: "First Word", desc: "Add your first word", icon: "Sparkles", test: (s) => s.totalWordsLearned >= 1 },
       { id: "fifty-words", label: "50 Words", desc: "Learn 50 words", icon: "BookOpen", test: (s) => s.totalWordsLearned >= 50 },
@@ -345,16 +525,114 @@
       return stats;
     }
 
-    /* ---------- Claude API helpers (uses the built-in Anthropic API proxy) ---------- */
+    /* ---------- Claude API helpers with smart offline AI engine fallbacks ---------- */
     async function claudeMessages(messages, system, maxTokens = 1000) {
+      const apiKey = window.localStorage.getItem("anthropic_api_key") || "";
+      const headers = { "Content-Type": "application/json" };
+      if (apiKey) {
+        headers["x-api-key"] = apiKey;
+        headers["anthropic-version"] = "2023-06-01";
+        headers["dangerously-allow-browser-headers"] = "true";
+      }
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: maxTokens, system, messages }),
+        headers,
+        body: JSON.stringify({ model: "claude-3-5-sonnet-20241022", max_tokens: maxTokens, system, messages }),
       });
       if (!res.ok) throw new Error(`API error ${res.status}`);
       const data = await res.json();
       return (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
+    }
+
+    function generateFallbackAIQuiz(aiType, n, vocab, struggleWords = []) {
+      const items = [];
+      const pool = (vocab && vocab.length > 0) ? vocab : SEED_WORDS.map(([de, en, art]) => ({ german: de, english: en, article: art || "" }));
+
+      for (let i = 0; i < n; i++) {
+        const wordObj = pool[i % pool.length];
+        const g = wordObj.german || "Wasser";
+        const e = wordObj.english || "water";
+        const art = wordObj.article ? wordObj.article + " " : "";
+
+        if (aiType === "sentence-translation") {
+          const templates = [
+            { prompt_en: `I like ${e}.`, answer_de: `Ich mag ${art}${g}.` },
+            { prompt_en: `Where is ${art ? "the" : ""} ${e}?`, answer_de: `Wo ist ${art || "das "}${g}?` },
+            { prompt_en: `We have ${e}.`, answer_de: `Wir haben ${art}${g}.` },
+            { prompt_en: `That is ${art ? "a" : ""} ${e}.`, answer_de: `Das ist ${art || "ein "}${g}.` }
+          ];
+          const t = templates[i % templates.length];
+          items.push({ id: uid(), type: aiType, ...t });
+        } else if (aiType === "sentence-building") {
+          const sentences = [
+            `Ich trinke gerne ${g}.`,
+            `Wo ist ${art || "das "}${g}?`,
+            `Das ist ein schönes ${g}.`,
+            `Wir brauchen heute ${art}${g}.`
+          ];
+          const ans = sentences[i % sentences.length].trim();
+          const tokens = ans.replace(/[.,!?]/g, "").split(" ");
+          items.push({ id: uid(), type: aiType, words: shuffle(tokens), answer_de: ans });
+        } else if (aiType === "fill-blank") {
+          const options = shuffle([g, "gehen", "kommen", "machen"]).slice(0, 3);
+          if (!options.includes(g)) options[0] = g;
+          items.push({
+            id: uid(), type: aiType,
+            sentence: `Ich möchte ___ (${e}).`,
+            options: shuffle(options),
+            answer: g
+          });
+        } else if (aiType === "conversation") {
+          items.push({
+            id: uid(), type: aiType,
+            lines: [
+              { speaker: "A", text_de: `Hallo! Hast du ${art}${g}?`, text_en: `Hello! Do you have ${e}?` },
+              { speaker: "B", text_de: `Ja, ich habe ${art}${g}. Bitte sehr!`, text_en: `Yes, I have ${e}. Here you go!` }
+            ]
+          });
+        } else {
+          // mistake-correction
+          const mistakes = [
+            { wrong_de: `Ich haben ${g}.`, correct_de: `Ich habe ${g}.` },
+            { wrong_de: `Wo ist der ${g}?`, correct_de: `Wo ist ${art || "das "}${g}?` },
+            { wrong_de: `Du ist sehr gut.`, correct_de: `Du bist sehr gut.` },
+            { wrong_de: `Wir geht nach Hause.`, correct_de: `Wir gehen nach Hause.` }
+          ];
+          items.push({ id: uid(), type: aiType, ...mistakes[i % mistakes.length] });
+        }
+      }
+      return items;
+    }
+
+    function generateFallbackTeacherReply(message, vocab = []) {
+      const lower = (message || "").toLowerCase();
+      const found = vocab.find((w) => lower.includes(w.german.toLowerCase()) || lower.includes(w.english.toLowerCase()));
+
+      if (found) {
+        const art = found.article ? `**${found.article}** ` : "";
+        const ex = found.example ? `\n\nExample sentence:\n• **${found.example}** (${found.exampleEn || found.english})` : "";
+        const note = found.notes ? `\n\n💡 Mnemonic/Tip: ${found.notes}` : "";
+        return `The word **${found.german}** means "${found.english}".\n\nArticle: ${art || "None (verb/adjective/phrase)"}${ex}${note}`;
+      }
+
+      if (lower.includes("correct") || lower.includes("check") || lower.includes("fix")) {
+        if (lower.includes("gehen")) return `Correction:\n• **Ich gehe zur Schule.** (not *Ich gehen Schule*)\n\nIn German, the verb conjugation for **ich** ends in **-e** (*ich gehe*). Also, "to school" is expressed as **zur Schule**.`;
+        return `Here is a grammar correction tip:\nAlways remember that in standard German main clauses, the conjugated verb MUST be in the **2nd position**! For example: **Heute lerne ich Deutsch.**`;
+      }
+
+      if (lower.includes("der") || lower.includes("die") || lower.includes("das") || lower.includes("article")) {
+        return `Here is the German article rule:\n• **der** = Masculine (*der Mann, der Tisch*)\n• **die** = Feminine & all Plurals (*die Frau, die Kinder*)\n• **das** = Neuter (*das Buch, das Wasser*)\n\nTip: Words ending in **-ung**, **-heit**, **-keit** are always **die**!`;
+      }
+
+      if (lower.includes("haben") || lower.includes("sein") || lower.includes("have") || lower.includes("is")) {
+        return `**Haben** (to have) vs. **Sein** (to be):\n\n• **haben**: *ich habe, du hast, er hat, wir haben*\n  Example: **Ich habe Zeit.** (I have time)\n• **sein**: *ich bin, du bist, er ist, wir sind*\n  Example: **Ich bin müde.** (I am tired)`;
+      }
+
+      if (lower.includes("hungry") || lower.includes("food") || lower.includes("essen")) {
+        return `In German, to say "I'm hungry", you usually say:\n• **Ich habe Hunger** (literally: I have hunger) or **Ich bin hungrig**.\nTo say "I'm thirsty", say:\n• **Ich habe Durst** or **Ich bin durstig**.`;
+      }
+
+      return `Guten Tag! As your German A1 teacher, I'm here to help you practice.\n\nYou can ask me:\n• To explain any word (e.g. *"Explain Wasser"*)\n• To check a sentence (e.g. *"Correct: Ich haben Hunger"*)\n• How to express feelings or questions (e.g. *"How do I say where is the station?"*)`;
     }
     function parseJsonLoose(text) {
       let t = (text || "").trim();
@@ -509,6 +787,270 @@
     }
 
     /* ============================================================
+       DAILY SPOTLIGHT 20 COMPONENT
+       ============================================================ */
+    function DailySpotlightSection({ th, data, slowAudio, onGoTab }) {
+      const spotlight20 = useMemo(() => get20DailySpotlightWords(data.vocab), [data.vocab]);
+      const [spotlightIndex, setSpotlightIndex] = useState(0);
+      const [showAllModal, setShowAllModal] = useState(false);
+
+      const word = spotlight20[spotlightIndex] || spotlight20[0];
+      if (!word) return null;
+
+      const nextCard = () => setSpotlightIndex((i) => (i + 1) % spotlight20.length);
+      const prevCard = () => setSpotlightIndex((i) => (i - 1 + spotlight20.length) % spotlight20.length);
+
+      return (
+        <div className="rounded-3xl p-4 border relative overflow-hidden transition-all shadow-sm" style={{ background: th.card, borderColor: th.border }}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5">
+              <span className="flex items-center justify-center p-1.5 rounded-full" style={{ background: th.mustardSoft, color: th.mustard }}>
+                <Flame size={16} />
+              </span>
+              <div>
+                <div className="font-extrabold text-sm leading-tight" style={{ fontFamily: DISPLAY_FONT }}>20 Daily Spotlight Words</div>
+                <div className="text-[10px]" style={{ color: th.sub }}>Challenging words updated daily</div>
+              </div>
+            </div>
+            <button onClick={() => setShowAllModal(true)} className="text-xs font-bold px-2.5 py-1 rounded-full border transition-all active:scale-95" style={{ background: th.mustardSoft, color: th.mustard, borderColor: th.mustard }}>
+              All 20 ({spotlightIndex + 1}/20)
+            </button>
+          </div>
+
+          {/* Active Card Swiper */}
+          <div className="rounded-2xl p-4 border relative" style={{ background: th.bg, borderColor: th.border }}>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: th.card, color: th.cobalt }}>
+                Word {spotlightIndex + 1} of {spotlight20.length}
+              </span>
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: th.card, color: th.sub }}>
+                {word.level || "A1"} · {word.category || "Vocabulary"}
+              </span>
+            </div>
+
+            <div className="mt-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                {word.article && <span className="text-sm font-bold" style={{ color: th.cobalt }}>{word.article}</span>}
+                <span className="font-extrabold text-xl" style={{ fontFamily: DISPLAY_FONT }}>{word.german}</span>
+                <button onClick={() => speakGerman(word.german, slowAudio)} className="p-1.5 rounded-full hover:scale-105 active:scale-95 transition-transform" style={{ background: th.card, color: th.cobalt }}>
+                  <Volume2 size={16} />
+                </button>
+              </div>
+              <div className="text-sm font-semibold mt-1" style={{ color: th.ink }}>{word.english}</div>
+
+              {word.example && (
+                <div className="text-xs mt-2 italic p-2.5 rounded-xl border border-dashed" style={{ background: th.card, color: th.sub, borderColor: th.border }}>
+                  "{word.example}" {word.exampleEn && <div className="not-italic font-medium text-[11px] mt-0.5" style={{ color: th.ink }}>— {word.exampleEn}</div>}
+                </div>
+              )}
+
+              {word.notes && (
+                <div className="mt-2 text-[11px] p-2 rounded-xl border border-dashed" style={{ background: th.mustardSoft, color: th.mustard, borderColor: th.mustard }}>
+                  💡 Mnemonic: {word.notes}
+                </div>
+              )}
+            </div>
+
+            {/* Navigation Controls */}
+            <div className="flex items-center justify-between mt-3 pt-2 border-t" style={{ borderColor: th.border }}>
+              <button onClick={prevCard} className="p-1.5 rounded-xl border flex items-center gap-1 text-xs font-bold transition-all active:scale-95" style={{ background: th.card, borderColor: th.border, color: th.sub }}>
+                <ChevronLeft size={14} /> Prev
+              </button>
+              <div className="flex gap-1 overflow-x-auto max-w-[120px] px-1">
+                {spotlight20.slice(0, 10).map((_, idx) => (
+                  <span key={idx} className="w-1.5 h-1.5 shrink-0 rounded-full transition-all" style={{ background: idx === (spotlightIndex % 10) ? th.mustard : th.border }} />
+                ))}
+              </div>
+              <button onClick={nextCard} className="p-1.5 rounded-xl border flex items-center gap-1 text-xs font-bold transition-all active:scale-95" style={{ background: th.card, borderColor: th.border, color: th.sub }}>
+                Next <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-3">
+            <button onClick={() => onGoTab("quiz")} className="w-full py-2.5 rounded-xl font-bold text-xs text-white flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]" style={{ background: th.mustard }}>
+              <Brain size={14} /> Practice All 20 Spotlight Words
+            </button>
+          </div>
+
+          {/* Modal to view full list of 20 Spotlight Words */}
+          {showAllModal && (
+            <Modal th={th} title="🔥 20 Daily Spotlight Words" onClose={() => setShowAllModal(false)}>
+              <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+                {spotlight20.map((item, i) => (
+                  <div key={item.id || i} onClick={() => { setSpotlightIndex(i); setShowAllModal(false); }} className="rounded-xl p-3 border cursor-pointer transition-all hover:scale-[0.99]" style={{ background: i === spotlightIndex ? th.mustardSoft : th.bg, borderColor: i === spotlightIndex ? th.mustard : th.border }}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-xs font-bold opacity-60">#{i + 1}</span>
+                        {item.article && <span className="text-xs font-bold" style={{ color: th.cobalt }}>{item.article}</span>}
+                        <span className="font-bold text-sm" style={{ fontFamily: DISPLAY_FONT }}>{item.german}</span>
+                      </div>
+                      <button onClick={(e) => { e.stopPropagation(); speakGerman(item.german, slowAudio); }} className="p-1 rounded-full" style={{ color: th.cobalt }}>
+                        <Volume2 size={14} />
+                      </button>
+                    </div>
+                    <div className="text-xs mt-0.5 font-medium" style={{ color: th.sub }}>{item.english}</div>
+                    {item.example && <div className="text-[11px] italic mt-1" style={{ color: th.sub }}>"{item.example}"</div>}
+                  </div>
+                ))}
+              </div>
+            </Modal>
+          )}
+        </div>
+      );
+    }
+
+    /* ============================================================
+       GRAMMAR & HELPER WORDS VIEW
+       ============================================================ */
+    function GrammarHelperView({ th, data, setData, slowAudio }) {
+      const [activeVerb, setActiveVerb] = useState("haben");
+      const [dailyAiTip, setDailyAiTip] = useState(() => {
+        return (data.stats && data.stats.dailyGrammarCache) || {
+          date: todayStr(),
+          title: "Daily Focus: Haben vs. Sein",
+          content: "In German, **haben** (to have) and **sein** (to be) are the two most essential helper verbs!\n\n• Use **haben** for possession (*Ich habe ein Auto*) and physical feelings (*Ich habe Hunger* = I am hungry).\n• Use **sein** for identity (*Ich bin Ahmed*), feelings (*Ich bin glücklich*), and locations (*Wir sind hier*)."
+        };
+      });
+      const [loadingTip, setLoadingTip] = useState(false);
+
+      const refreshDailyTip = async () => {
+        if (loadingTip) return;
+        setLoadingTip(true);
+        try {
+          const system = "You are a friendly German A1 teacher. Provide a concise, clear daily grammar focus tip with short bullet examples. Keep it under 100 words. Use **bold** for German words.";
+          const user = "Generate a fresh daily German A1 grammar focus tip (e.g. word order, question words, articles, or modal verbs).";
+          const res = await claudeMessages([{ role: "user", content: user }], system, 400);
+          const newTip = { date: todayStr(), title: "✨ Daily AI Grammar Focus", content: res };
+          setDailyAiTip(newTip);
+          setData((prev) => ({ ...prev, stats: { ...prev.stats, dailyGrammarCache: newTip } }));
+        } catch (e) {
+          // graceful fallback
+        } finally {
+          setLoadingTip(false);
+        }
+      };
+
+      const verbData = VERB_CONJUGATIONS.find((v) => v.verb === activeVerb) || VERB_CONJUGATIONS[0];
+
+      return (
+        <div className="space-y-4 pb-4">
+          {/* Daily AI Grammar Focus Card */}
+          <div className="rounded-3xl p-4 border relative" style={{ background: `linear-gradient(135deg, ${th.cobaltSoft}, ${th.card})`, borderColor: th.cobalt }}>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5">
+                <Sparkles size={16} style={{ color: th.cobalt }} />
+                <div className="font-extrabold text-sm" style={{ fontFamily: DISPLAY_FONT }}>{dailyAiTip.title}</div>
+              </div>
+              <button onClick={refreshDailyTip} disabled={loadingTip} className="p-1.5 rounded-full border text-xs font-bold flex items-center gap-1 transition-all active:scale-95" style={{ background: th.card, borderColor: th.border, color: th.cobalt }}>
+                {loadingTip ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />} Refresh AI Tip
+              </button>
+            </div>
+            <div className="text-xs leading-relaxed whitespace-pre-line" style={{ color: th.ink }}>
+              {renderLite(dailyAiTip.content)}
+            </div>
+          </div>
+
+          {/* Verb Conjugation Section */}
+          <div className="rounded-2xl p-4 border" style={{ background: th.card, borderColor: th.border }}>
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <div className="font-extrabold text-sm" style={{ fontFamily: DISPLAY_FONT }}>Verb Conjugation Helper</div>
+                <div className="text-[11px]" style={{ color: th.sub }}>Where words like haben, hast, hat, bin, bist come from</div>
+              </div>
+            </div>
+
+            {/* Verb selector chips */}
+            <div className="flex gap-1.5 overflow-x-auto pb-2">
+              {VERB_CONJUGATIONS.map((v) => (
+                <button key={v.verb} onClick={() => setActiveVerb(v.verb)} className="px-3 py-1.5 rounded-xl font-extrabold text-xs whitespace-nowrap transition-all active:scale-95 border"
+                  style={activeVerb === v.verb ? { background: th.cobalt, color: "#fff", borderColor: th.cobalt } : { background: th.bg, color: th.sub, borderColor: th.border }}>
+                  {v.verb}
+                </button>
+              ))}
+            </div>
+
+            <div className="text-xs font-medium my-1" style={{ color: th.sub }}>{verbData.english} — <i>{verbData.note}</i></div>
+
+            {/* Conjugation Table */}
+            <div className="space-y-1.5 mt-3">
+              {verbData.forms.map((f, i) => (
+                <div key={i} className="rounded-xl p-2.5 border flex flex-col gap-1" style={{ background: th.bg, borderColor: th.border }}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-lg" style={{ background: th.card, color: th.sub }}>{f.pronoun}</span>
+                      <span className="font-extrabold text-sm" style={{ color: th.cobalt, fontFamily: DISPLAY_FONT }}>{f.form}</span>
+                      <span className="text-xs" style={{ color: th.sub }}>({f.en})</span>
+                    </div>
+                    <button onClick={() => speakGerman(`${f.pronoun} ${f.form}`, slowAudio)} className="p-1 rounded-full hover:scale-105 active:scale-95 transition-transform" style={{ color: th.cobalt }}>
+                      <Volume2 size={14} />
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between text-xs italic pl-1" style={{ color: th.sub }}>
+                    <span>"{f.ex}" — {f.exEn}</span>
+                    <button onClick={() => speakGerman(f.ex, slowAudio)} className="p-0.5 rounded-full" style={{ color: th.sub }}>
+                      <Volume2 size={12} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Question Words Section */}
+          <div className="rounded-2xl p-4 border" style={{ background: th.card, borderColor: th.border }}>
+            <div className="font-extrabold text-sm mb-1" style={{ fontFamily: DISPLAY_FONT }}>German Question Words (W-Fragen)</div>
+            <div className="text-[11px] mb-3" style={{ color: th.sub }}>Words like wo, wohin, woher, wie, was, warum</div>
+            <div className="grid grid-cols-1 gap-2">
+              {QUESTION_WORDS.map((q) => (
+                <div key={q.de} className="rounded-xl p-3 border" style={{ background: th.bg, borderColor: th.border }}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-base uppercase tracking-wide" style={{ color: th.mustard, fontFamily: DISPLAY_FONT }}>{q.de}</span>
+                      <span className="text-xs font-semibold" style={{ color: th.ink }}>= {q.en}</span>
+                    </div>
+                    <button onClick={() => speakGerman(q.de, slowAudio)} className="p-1 rounded-full" style={{ color: th.mustard }}>
+                      <Volume2 size={14} />
+                    </button>
+                  </div>
+                  <div className="text-[11px] mt-1 opacity-90" style={{ color: th.sub }}>💡 {q.tip}</div>
+                  <div className="text-xs italic mt-1.5 flex items-center justify-between p-1.5 rounded-lg border" style={{ background: th.card, borderColor: th.border, color: th.ink }}>
+                    <span>"{q.ex}" ({q.exEn})</span>
+                    <button onClick={() => speakGerman(q.ex, slowAudio)} className="p-0.5 rounded-full" style={{ color: th.cobalt }}>
+                      <Volume2 size={12} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Articles & Gender Cheat Sheet */}
+          <div className="rounded-2xl p-4 border" style={{ background: th.card, borderColor: th.border }}>
+            <div className="font-extrabold text-sm mb-2" style={{ fontFamily: DISPLAY_FONT }}>Articles Guide (der / die / das)</div>
+            <div className="grid grid-cols-3 gap-2 text-center text-xs">
+              <div className="rounded-xl p-2.5 border" style={{ background: th.cobaltSoft, borderColor: th.cobalt, color: th.cobalt }}>
+                <div className="font-extrabold text-sm">der</div>
+                <div className="text-[10px] mt-0.5 font-semibold">Masculine</div>
+                <div className="text-[9px] mt-1 opacity-80">der Mann, der Tisch, der Hund</div>
+              </div>
+              <div className="rounded-xl p-2.5 border" style={{ background: th.brickSoft, borderColor: th.brick, color: th.brick }}>
+                <div className="font-extrabold text-sm">die</div>
+                <div className="text-[10px] mt-0.5 font-semibold">Feminine / Plural</div>
+                <div className="text-[9px] mt-1 opacity-80">die Frau, die Sonne, die Katzen</div>
+              </div>
+              <div className="rounded-xl p-2.5 border" style={{ background: th.forestSoft, borderColor: th.forest, color: th.forest }}>
+                <div className="font-extrabold text-sm">das</div>
+                <div className="text-[10px] mt-0.5 font-semibold">Neuter</div>
+                <div className="text-[9px] mt-1 opacity-80">das Buch, das Wasser, das Haus</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ============================================================
        DASHBOARD
        ============================================================ */
     function Dashboard({ th, data, dueWords, goalMetToday, todayAdded, onGoTab, slowAudio }) {
@@ -558,42 +1100,8 @@
             ))}
           </div>
 
-          {(() => {
-            const spotlightWord = data.vocab.length ? (() => {
-              const due = data.vocab.filter((w) => w.nextReview <= todayStr());
-              if (due.length > 0) return due[0];
-              const struggle = data.vocab.filter((w) => w.incorrectCount > w.correctCount);
-              if (struggle.length > 0) return struggle[0];
-              return data.vocab[0];
-            })() : null;
-
-            return spotlightWord && (
-              <div className="rounded-2xl p-4 border relative overflow-hidden transition-all hover:shadow-md" style={{ background: th.card, borderColor: th.border }}>
-                <div className="absolute top-3.5 right-3.5 flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: th.mustardSoft, color: th.mustard }}>
-                  <Sparkles size={11} /> Spotlight
-                </div>
-                <div className="text-xs font-semibold mb-1" style={{ color: th.sub }}>Daily Spotlight</div>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {spotlightWord.article && <span className="text-xs font-bold" style={{ color: th.cobalt }}>{spotlightWord.article}</span>}
-                  <span className="font-extrabold text-lg" style={{ fontFamily: DISPLAY_FONT }}>{spotlightWord.german}</span>
-                  <button onClick={() => speakGerman(spotlightWord.german, slowAudio)} className="p-1 rounded-full transition-transform active:scale-90" style={{ color: th.cobalt }}>
-                    <Volume2 size={15} />
-                  </button>
-                </div>
-                <div className="text-sm font-medium mt-0.5" style={{ color: th.ink }}>{spotlightWord.english}</div>
-                {spotlightWord.example && (
-                  <div className="text-xs mt-2 italic text-left" style={{ color: th.sub }}>
-                    "{spotlightWord.example}" {spotlightWord.exampleEn && <span>— {spotlightWord.exampleEn}</span>}
-                  </div>
-                )}
-                {spotlightWord.notes && (
-                  <div className="mt-2 text-[11px] p-2 rounded-lg border border-dashed text-left" style={{ background: th.mustardSoft, color: th.mustard, borderColor: th.mustard }}>
-                    💡 Mnemonic: {spotlightWord.notes}
-                  </div>
-                )}
-              </div>
-            );
-          })()}
+          {/* 20 Daily Spotlight Words Component */}
+          <DailySpotlightSection th={th} data={data} slowAudio={slowAudio} onGoTab={onGoTab} />
 
           <div className="rounded-2xl p-4" style={{ background: th.card, border: `1px solid ${th.border}` }}>
             <div className="flex items-center justify-between mb-2">
@@ -655,8 +1163,38 @@
       const [form, setForm] = useState(initial || { german: "", english: "", article: "", plural: "", example: "", exampleEn: "", notes: "", category: CATEGORIES[0], level: "A1" });
       const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
       const canSave = form.german.trim() && form.english.trim();
+
+      if (!initial) {
+        // Simplified word addition form - user ONLY types German word & English meaning!
+        return (
+          <Modal th={th} title="Add a Word" onClose={onClose}>
+            <div className="space-y-3.5">
+              <div className="p-3 rounded-2xl border text-xs leading-relaxed" style={{ background: th.cobaltSoft, color: th.cobalt, borderColor: th.cobalt }}>
+                ✨ <strong>Enter just the word & meaning!</strong> The app will automatically determine the article, A1 example sentence, translation, and study notes using AI.
+              </div>
+
+              <div>
+                <FieldLabel th={th}>German Word</FieldLabel>
+                <TextInput th={th} value={form.german} onChange={(e) => set("german", e.target.value)} placeholder="e.g. Wasser or laufen or der Tisch" />
+              </div>
+
+              <div>
+                <FieldLabel th={th}>English Meaning</FieldLabel>
+                <TextInput th={th} value={form.english} onChange={(e) => set("english", e.target.value)} placeholder="e.g. water or to run or the table" />
+              </div>
+
+              <button disabled={!canSave} onClick={() => onSave(form)} className="w-full py-3.5 rounded-xl font-bold text-white mt-2 disabled:opacity-40 flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]"
+                style={{ background: th.cobalt }}>
+                <Sparkles size={16} /> Add Word ✨
+              </button>
+            </div>
+          </Modal>
+        );
+      }
+
+      // Editing existing word (full view)
       return (
-        <Modal th={th} title={initial ? "Edit word" : "Add a word"} onClose={onClose}>
+        <Modal th={th} title="Edit Word" onClose={onClose}>
           <div className="space-y-3">
             <div className="grid grid-cols-3 gap-2">
               <div className="col-span-1">
@@ -667,12 +1205,12 @@
                 </select>
               </div>
               <div className="col-span-2">
-                <FieldLabel th={th}>German word</FieldLabel>
+                <FieldLabel th={th}>German Word</FieldLabel>
                 <TextInput th={th} value={form.german} onChange={(e) => set("german", e.target.value)} placeholder="Wasser" />
               </div>
             </div>
             <div>
-              <FieldLabel th={th}>English meaning</FieldLabel>
+              <FieldLabel th={th}>English Meaning</FieldLabel>
               <TextInput th={th} value={form.english} onChange={(e) => set("english", e.target.value)} placeholder="water" />
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -689,11 +1227,11 @@
               </div>
             </div>
             <div>
-              <FieldLabel th={th}>Example sentence (German)</FieldLabel>
+              <FieldLabel th={th}>Example Sentence (German)</FieldLabel>
               <TextInput th={th} value={form.example} onChange={(e) => set("example", e.target.value)} placeholder="Ich trinke Wasser." />
             </div>
             <div>
-              <FieldLabel th={th}>Example translation (English)</FieldLabel>
+              <FieldLabel th={th}>Example Translation (English)</FieldLabel>
               <TextInput th={th} value={form.exampleEn} onChange={(e) => set("exampleEn", e.target.value)} placeholder="I drink water." />
             </div>
             <div>
@@ -710,7 +1248,7 @@
               </div>
             </div>
             <button disabled={!canSave} onClick={() => onSave(form)} className="w-full py-3 rounded-xl font-bold text-white mt-2 disabled:opacity-40"
-              style={{ background: th.cobalt }}>{initial ? "Save changes" : "Add word"}</button>
+              style={{ background: th.cobalt }}>Save Changes</button>
           </div>
         </Modal>
       );
@@ -755,6 +1293,7 @@
       );
     }
     function VocabularyView({ th, data, setData, showToast, slowAudio }) {
+      const [vocabSubTab, setVocabSubTab] = useState("words"); // "words" or "grammar"
       const [search, setSearch] = useState("");
       const [catFilter, setCatFilter] = useState("All");
       const [levelFilter, setLevelFilter] = useState("All");
@@ -773,8 +1312,31 @@
 
       const addWord = (form) => {
         const today = todayStr();
+        let article = form.article || "";
+        let cleanGerman = (form.german || "").trim();
+
+        // Auto-extract article if user typed "der Tisch", "die Katze", "das Haus"
+        if (/^der\s+/i.test(cleanGerman)) { article = "der"; cleanGerman = cleanGerman.replace(/^der\s+/i, ""); }
+        else if (/^die\s+/i.test(cleanGerman)) { article = "die"; cleanGerman = cleanGerman.replace(/^die\s+/i, ""); }
+        else if (/^das\s+/i.test(cleanGerman)) { article = "das"; cleanGerman = cleanGerman.replace(/^das\s+/i, ""); }
+
+        const wordId = uid();
+        const word = {
+          id: wordId,
+          german: cleanGerman,
+          english: form.english.trim(),
+          article: article,
+          plural: form.plural || "",
+          category: form.category || "Actions",
+          level: form.level || "A1",
+          example: form.example || `Ich kenne ${cleanGerman}.`,
+          exampleEn: form.exampleEn || `I know ${form.english.trim()}.`,
+          notes: form.notes || "",
+          correctCount: 0, incorrectCount: 0, streakCount: 0,
+          status: "learning", dateAdded: today, nextReview: today, difficulty: "medium"
+        };
+
         setData((prev) => {
-          const word = { id: uid(), ...form, correctCount: 0, incorrectCount: 0, streakCount: 0, status: "learning", dateAdded: today, nextReview: today, difficulty: "medium" };
           const vocab = [...prev.vocab, word];
           const log = { ...prev.stats.wordsAddedLog, [today]: (prev.stats.wordsAddedLog[today] || 0) + 1 };
           const addedToday = log[today];
@@ -802,8 +1364,12 @@
           };
         });
         setShowAdd(false);
-        showToast("+5 XP · word added", th.forest);
+        showToast("+5 XP · word added ✨ AI enriching...", th.forest);
+
+        // Async AI enrichment call
+        enrichWordWithAI(wordId, cleanGerman, form.english.trim(), setData);
       };
+
       const saveEdit = (form) => {
         setData((prev) => ({ ...prev, vocab: prev.vocab.map((w) => (w.id === editing.id ? { ...w, ...form } : w)) }));
         setEditing(null);
@@ -818,36 +1384,55 @@
 
       return (
         <div className="space-y-3 pb-4">
-          <div className="flex gap-2">
-            <div className="flex-1 flex items-center gap-2 rounded-xl px-3 py-2.5" style={{ background: th.card, border: `1px solid ${th.border}` }}>
-              <Search size={15} style={{ color: th.sub }} />
-              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search words..." className="flex-1 bg-transparent outline-none text-sm" style={{ color: th.ink }} />
-            </div>
-            <button onClick={() => setShowAdd(true)} className="px-4 rounded-xl font-bold text-white flex items-center gap-1" style={{ background: th.cobalt }}>
-              <Plus size={16} /> Add
+          {/* Sub-tab switcher */}
+          <div className="flex gap-2 mb-2">
+            <button onClick={() => setVocabSubTab("words")} className="flex-1 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 border transition-all active:scale-[0.98]"
+              style={vocabSubTab === "words" ? { background: th.cobalt, color: "#fff", borderColor: th.cobalt } : { background: th.card, color: th.sub, borderColor: th.border }}>
+              <BookOpen size={15} /> All Words ({data.vocab.length})
+            </button>
+            <button onClick={() => setVocabSubTab("grammar")} className="flex-1 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 border transition-all active:scale-[0.98]"
+              style={vocabSubTab === "grammar" ? { background: th.mustard, color: "#fff", borderColor: th.mustard } : { background: th.card, color: th.sub, borderColor: th.border }}>
+              <Sparkles size={15} /> Grammar & Helpers
             </button>
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            <Chip th={th} active={levelFilter === "All"} onClick={() => setLevelFilter("All")}>All levels</Chip>
-            {["A1", "A2", "B1"].map((l) => <Chip key={l} th={th} active={levelFilter === l} onClick={() => setLevelFilter(l)} color={th.mustard}>{l}</Chip>)}
-          </div>
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            <Chip th={th} active={catFilter === "All"} onClick={() => setCatFilter("All")}>All categories</Chip>
-            {CATEGORIES.map((c) => <Chip key={c} th={th} active={catFilter === c} onClick={() => setCatFilter(c)}>{c}</Chip>)}
-          </div>
-          <div className="text-xs" style={{ color: th.sub }}>{filtered.length} word{filtered.length !== 1 ? "s" : ""}</div>
-          <div className="space-y-2.5">
-            {filtered.map((w) => (
-              <WordCard key={w.id} th={th} word={w} onEdit={setEditing} onDelete={(id) => setConfirmingId(id)}
-                confirmingDelete={confirmingId === w.id} onConfirmDelete={deleteWord} onToggleMastered={toggleMastered} slowAudio={slowAudio} />
-            ))}
-            {filtered.length === 0 && (
-              <div className="text-center py-10" style={{ color: th.sub }}>
-                <BookOpen size={28} className="mx-auto mb-2 opacity-50" />
-                <div className="text-sm">No words match. Try a different filter, or add a new one.</div>
+
+          {vocabSubTab === "grammar" ? (
+            <GrammarHelperView th={th} data={data} setData={setData} slowAudio={slowAudio} />
+          ) : (
+            <>
+              <div className="flex gap-2">
+                <div className="flex-1 flex items-center gap-2 rounded-xl px-3 py-2.5" style={{ background: th.card, border: `1px solid ${th.border}` }}>
+                  <Search size={15} style={{ color: th.sub }} />
+                  <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search words..." className="flex-1 bg-transparent outline-none text-sm" style={{ color: th.ink }} />
+                </div>
+                <button onClick={() => setShowAdd(true)} className="px-4 rounded-xl font-bold text-white flex items-center gap-1 transition-all active:scale-95" style={{ background: th.cobalt }}>
+                  <Plus size={16} /> Add
+                </button>
               </div>
-            )}
-          </div>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                <Chip th={th} active={levelFilter === "All"} onClick={() => setLevelFilter("All")}>All levels</Chip>
+                {["A1", "A2", "B1"].map((l) => <Chip key={l} th={th} active={levelFilter === l} onClick={() => setLevelFilter(l)} color={th.mustard}>{l}</Chip>)}
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                <Chip th={th} active={catFilter === "All"} onClick={() => setCatFilter("All")}>All categories</Chip>
+                {CATEGORIES.map((c) => <Chip key={c} th={th} active={catFilter === c} onClick={() => setCatFilter(c)}>{c}</Chip>)}
+              </div>
+              <div className="text-xs" style={{ color: th.sub }}>{filtered.length} word{filtered.length !== 1 ? "s" : ""}</div>
+              <div className="space-y-2.5">
+                {filtered.map((w) => (
+                  <WordCard key={w.id} th={th} word={w} onEdit={setEditing} onDelete={(id) => setConfirmingId(id)}
+                    confirmingDelete={confirmingId === w.id} onConfirmDelete={deleteWord} onToggleMastered={toggleMastered} slowAudio={slowAudio} />
+                ))}
+                {filtered.length === 0 && (
+                  <div className="text-center py-10" style={{ color: th.sub }}>
+                    <BookOpen size={28} className="mx-auto mb-2 opacity-50" />
+                    <div className="text-sm">No words match. Try a different filter, or add a new one.</div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
           {showAdd && <WordFormModal th={th} onSave={addWord} onClose={() => setShowAdd(false)} />}
           {editing && <WordFormModal th={th} initial={editing} onSave={saveEdit} onClose={() => setEditing(null)} />}
         </div>
@@ -1165,8 +1750,9 @@
           if (!items.length) throw new Error("empty");
           setQuestions(items); setQIndex(0); setAnswered(false); setSelected(null); setCorrectSoFar(0); setMode("ai-session");
         } catch (e) {
-          setAiError("Couldn't reach the AI teacher to generate this quiz. Check your connection and try again.");
-          setMode("ai-error");
+          // Seamless fallback using offline AI exercise engine!
+          const fallbackItems = generateFallbackAIQuiz(aiType, Math.min(count, 6), data.vocab, struggleWords);
+          setQuestions(fallbackItems); setQIndex(0); setAnswered(false); setSelected(null); setCorrectSoFar(0); setMode("ai-session");
         }
       };
       const answerAI = (isCorrect, sel) => { setAnswered(true); setSelected(sel); if (isCorrect) setCorrectSoFar((c) => c + 1); };
@@ -1449,9 +2035,10 @@
           const apiMessages = history.map((m) => ({ role: m.role, content: m.content }));
           const contextNote = `(Learner context: knows ${data.vocab.length} words, currently at ${getLevelInfo(data.vocab ? data.vocab.length : 0).current.name} level.)`;
           const reply = await claudeMessages(apiMessages, TEACHER_SYSTEM_PROMPT + " " + contextNote, 1000);
-          setData((prev) => ({ ...prev, teacherChat: [...prev.teacherChat, { role: "assistant", content: reply || "Sorry, I couldn't come up with an answer — try asking again." }].slice(-40) }));
+          setData((prev) => ({ ...prev, teacherChat: [...prev.teacherChat, { role: "assistant", content: reply || "Entschuldigung, please try asking again." }].slice(-40) }));
         } catch (e) {
-          setData((prev) => ({ ...prev, teacherChat: [...prev.teacherChat, { role: "assistant", content: "I couldn't reach the AI teacher right now. Check your connection and try again." }].slice(-40) }));
+          const fallbackReply = generateFallbackTeacherReply(msg, data.vocab);
+          setData((prev) => ({ ...prev, teacherChat: [...prev.teacherChat, { role: "assistant", content: fallbackReply }].slice(-40) }));
         } finally { setLoading(false); }
       };
       const suggestions = ["Explain \"gehen\"", "Correct: Ich gehen Schule", "How do I say I'm hungry?", "der/die/das rule?"];
@@ -1644,6 +2231,26 @@
                 <span className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all"
                   style={{ left: data.profile.slowAudio ? "calc(100% - 22px)" : "2px" }} />
               </button>
+            </div>
+
+            {/* Custom Anthropic API Key */}
+            <div className="flex items-center justify-between py-2.5 border-t" style={{ borderColor: th.border }}>
+              <div>
+                <div className="text-sm font-semibold">🔑 Anthropic API Key (Optional)</div>
+                <div className="text-xs" style={{ color: th.sub }}>For live Anthropic API connection (leave empty to use local AI engine)</div>
+              </div>
+              <input
+                type="password"
+                placeholder="sk-ant-..."
+                value={data.profile.apiKey || window.localStorage.getItem("anthropic_api_key") || ""}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  window.localStorage.setItem("anthropic_api_key", val);
+                  setData((prev) => ({ ...prev, profile: { ...prev.profile, apiKey: val } }));
+                }}
+                className="w-28 rounded-lg px-2 py-1 text-xs outline-none border"
+                style={{ background: th.bg, color: th.ink, borderColor: th.border }}
+              />
             </div>
 
             {/* Backup / Restore */}
