@@ -46,7 +46,7 @@
     }
   </script>
 </head>
-<body class="bg-slate-100 min-h-screen flex items-center justify-center py-6 px-4">
+<body class="bg-slate-100 min-h-screen sm:flex sm:items-center sm:justify-center sm:py-6 sm:px-4">
   <div id="root"></div>
 
   <script type="text/babel">
@@ -311,11 +311,12 @@
       const progress = next ? Math.min(1, Math.max(0, (count - current.min) / (next.min - current.min))) : 1;
       return { index: idx, current, next, progress: isNaN(progress) ? 0 : progress };
     }
-    function speakGerman(text) {
+    function speakGerman(text, slow = false) {
       if ("speechSynthesis" in window) {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = "de-DE";
+        utterance.rate = slow ? 0.6 : 1.0;
         window.speechSynthesis.speak(utterance);
       }
     }
@@ -327,9 +328,10 @@
         correctCount: 0, incorrectCount: 0, streakCount: 0, status: "learning", nextReview: today,
       }));
       return {
-        profile: { name: "Ahmed", dailyGoal: 10, darkMode: false, createdAt: today },
+        profile: { name: "Ahmed", dailyGoal: 10, darkMode: false, slowAudio: false, createdAt: today },
         stats: {
           xp: vocab.length * 5, streak: 0, lastStreakDate: null, goalBankedUntil: null,
+          streakFreezes: 0,
           totalWordsLearned: vocab.length, wordsAddedLog: {},
           history: [{ type: "system", text: `Imported ${vocab.length} words from your existing vocabulary`, date: new Date().toISOString(), xp: vocab.length * 5 }],
         },
@@ -509,7 +511,7 @@
     /* ============================================================
        DASHBOARD
        ============================================================ */
-    function Dashboard({ th, data, dueWords, goalMetToday, todayAdded, onGoTab }) {
+    function Dashboard({ th, data, dueWords, goalMetToday, todayAdded, onGoTab, slowAudio }) {
       const level = getLevelInfo(data.vocab ? data.vocab.length : 0);
       const hour = new Date().getHours();
       const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
@@ -574,7 +576,7 @@
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {spotlightWord.article && <span className="text-xs font-bold" style={{ color: th.cobalt }}>{spotlightWord.article}</span>}
                   <span className="font-extrabold text-lg" style={{ fontFamily: DISPLAY_FONT }}>{spotlightWord.german}</span>
-                  <button onClick={() => speakGerman(spotlightWord.german)} className="p-1 rounded-full transition-transform active:scale-90" style={{ color: th.cobalt }}>
+                  <button onClick={() => speakGerman(spotlightWord.german, slowAudio)} className="p-1 rounded-full transition-transform active:scale-90" style={{ color: th.cobalt }}>
                     <Volume2 size={15} />
                   </button>
                 </div>
@@ -713,7 +715,7 @@
         </Modal>
       );
     }
-    function WordCard({ th, word, onEdit, onDelete, onToggleMastered, confirmingDelete, onConfirmDelete }) {
+    function WordCard({ th, word, onEdit, onDelete, onToggleMastered, confirmingDelete, onConfirmDelete, slowAudio }) {
       const accuracy = word.correctCount + word.incorrectCount > 0 ? Math.round((word.correctCount / (word.correctCount + word.incorrectCount)) * 100) : null;
       return (
         <div className="rounded-2xl p-3.5" style={{ background: th.card, border: `1px solid ${th.border}` }}>
@@ -722,7 +724,7 @@
               <div className="flex items-center gap-1.5 flex-wrap">
                 {word.article && <span className="text-xs font-bold" style={{ color: th.cobalt }}>{word.article}</span>}
                 <span className="font-bold text-base truncate" style={{ fontFamily: DISPLAY_FONT }}>{word.german}</span>
-                <button onClick={() => speakGerman(word.german)} className="p-1 rounded-full text-xs transition-transform active:scale-95" style={{ color: th.cobalt }}>
+                <button onClick={() => speakGerman(word.german, slowAudio)} className="p-1 rounded-full text-xs transition-transform active:scale-95" style={{ color: th.cobalt }}>
                   <Volume2 size={14} />
                 </button>
                 {word.status === "mastered" && <CheckCircle2 size={14} style={{ color: th.forest }} />}
@@ -752,7 +754,7 @@
         </div>
       );
     }
-    function VocabularyView({ th, data, setData, showToast }) {
+    function VocabularyView({ th, data, setData, showToast, slowAudio }) {
       const [search, setSearch] = useState("");
       const [catFilter, setCatFilter] = useState("All");
       const [levelFilter, setLevelFilter] = useState("All");
@@ -837,7 +839,7 @@
           <div className="space-y-2.5">
             {filtered.map((w) => (
               <WordCard key={w.id} th={th} word={w} onEdit={setEditing} onDelete={(id) => setConfirmingId(id)}
-                confirmingDelete={confirmingId === w.id} onConfirmDelete={deleteWord} onToggleMastered={toggleMastered} />
+                confirmingDelete={confirmingId === w.id} onConfirmDelete={deleteWord} onToggleMastered={toggleMastered} slowAudio={slowAudio} />
             ))}
             {filtered.length === 0 && (
               <div className="text-center py-10" style={{ color: th.sub }}>
@@ -872,7 +874,7 @@
       }
       return { id: uid(), word, type: "de-en", prompt: word.german, options: [word.english], correct: word.english };
     }
-    function QuestionCard({ th, q, onAnswer, answered, selected }) {
+    function QuestionCard({ th, q, onAnswer, answered, selected, slowAudio }) {
       const [typed, setTyped] = useState("");
       if (q.type === "de-en" || q.type === "en-de" || q.type === "article") {
         return (
@@ -881,7 +883,7 @@
             <div className="flex items-center gap-2 mb-4">
               <div className="font-extrabold text-2xl" style={{ fontFamily: DISPLAY_FONT }}>{q.prompt}</div>
               {(q.type === "de-en" || q.type === "article") && (
-                <button onClick={() => speakGerman(q.prompt)} className="p-1.5 rounded-full hover:scale-105 active:scale-95 transition-transform" style={{ background: th.bg, color: th.cobalt }}>
+                <button onClick={() => speakGerman(q.prompt, slowAudio)} className="p-1.5 rounded-full hover:scale-105 active:scale-95 transition-transform" style={{ background: th.bg, color: th.cobalt }}>
                   <Volume2 size={16} />
                 </button>
               )}
@@ -918,7 +920,7 @@
           {answered && (
             <div className="text-xs mt-2 flex items-center gap-1.5" style={{ color: th.forest }}>
               <span>Correct answer: <strong>{(q.word.article ? q.word.article + " " : "") + q.correct}</strong></span>
-              <button onClick={() => speakGerman(q.correct)} className="p-1 rounded-full hover:scale-105 active:scale-95 transition-transform" style={{ background: th.forestSoft, color: th.forest }}>
+              <button onClick={() => speakGerman(q.correct, slowAudio)} className="p-1 rounded-full hover:scale-105 active:scale-95 transition-transform" style={{ background: th.forestSoft, color: th.forest }}>
                 <Volume2 size={13} />
               </button>
             </div>
@@ -932,7 +934,7 @@
         </div>
       );
     }
-    function AIQuestionCard({ th, item, onAnswer, answered, selected }) {
+    function AIQuestionCard({ th, item, onAnswer, answered, selected, slowAudio }) {
       const [typed, setTyped] = useState("");
       if (item.type === "conversation") {
         return (
@@ -958,7 +960,7 @@
             <div className="flex items-center gap-2 mb-4">
               <div className="font-extrabold text-xl" style={{ fontFamily: DISPLAY_FONT }}>{item.sentence}</div>
               {answered && (
-                <button onClick={() => speakGerman(item.sentence.replace("___", item.answer))} className="p-1.5 rounded-full hover:scale-105 active:scale-95 transition-transform" style={{ background: th.bg, color: th.cobalt }}>
+                <button onClick={() => speakGerman(item.sentence.replace("___", item.answer), slowAudio)} className="p-1.5 rounded-full hover:scale-105 active:scale-95 transition-transform" style={{ background: th.bg, color: th.cobalt }}>
                   <Volume2 size={14} />
                 </button>
               )}
@@ -977,7 +979,7 @@
         );
       }
       if (item.type === "sentence-building") {
-        return <SentenceBuilder th={th} item={item} onAnswer={onAnswer} answered={answered} />;
+        return <SentenceBuilder th={th} item={item} onAnswer={onAnswer} answered={answered} slowAudio={slowAudio} />;
       }
       const prompt = item.type === "sentence-translation" ? item.prompt_en : item.wrong_de;
       const answerKey = item.type === "sentence-translation" ? item.answer_de : item.correct_de;
@@ -991,7 +993,7 @@
           {answered && (
             <div className="text-xs mt-2 flex items-center gap-1.5" style={{ color: th.forest }}>
               <span>Model answer: <strong>{answerKey}</strong></span>
-              <button onClick={() => speakGerman(answerKey)} className="p-1 rounded-full hover:scale-105 active:scale-95 transition-transform" style={{ background: th.forestSoft, color: th.forest }}>
+              <button onClick={() => speakGerman(answerKey, slowAudio)} className="p-1 rounded-full hover:scale-105 active:scale-95 transition-transform" style={{ background: th.forestSoft, color: th.forest }}>
                 <Volume2 size={13} />
               </button>
             </div>
@@ -1000,7 +1002,7 @@
         </div>
       );
     }
-    function SentenceBuilder({ th, item, onAnswer, answered }) {
+    function SentenceBuilder({ th, item, onAnswer, answered, slowAudio }) {
       const [chosen, setChosen] = useState([]);
       const [bank, setBank] = useState(() => shuffle(item.words));
       const pick = (w, i) => { setChosen((c) => [...c, w]); setBank((b) => b.filter((_, idx) => idx !== i)); };
@@ -1022,7 +1024,7 @@
           {answered && (
             <div className="text-xs mb-2 flex items-center gap-1.5" style={{ color: th.forest }}>
               <span>Correct: <strong>{item.answer_de}</strong></span>
-              <button onClick={() => speakGerman(item.answer_de)} className="p-1 rounded-full hover:scale-105 active:scale-95 transition-transform" style={{ background: th.forestSoft, color: th.forest }}>
+              <button onClick={() => speakGerman(item.answer_de, slowAudio)} className="p-1 rounded-full hover:scale-105 active:scale-95 transition-transform" style={{ background: th.forestSoft, color: th.forest }}>
                 <Volume2 size={13} />
               </button>
             </div>
@@ -1042,7 +1044,7 @@
       { id: "mistake-correction", label: "Mistake correction" },
     ];
 
-    function QuizHub({ th, data, setData, showToast, setCelebrate, goalMetToday }) {
+    function QuizHub({ th, data, setData, showToast, setCelebrate, goalMetToday, slowAudio }) {
       const [mode, setMode] = useState("menu");
       const [quickTypes, setQuickTypes] = useState(["de-en", "en-de"]);
       const [aiType, setAiType] = useState("sentence-translation");
@@ -1260,7 +1262,7 @@
                     <div className="flex items-center gap-1.5 flex-wrap justify-center">
                       {word.article && <span className="text-sm font-bold" style={{ color: th.cobalt }}>{word.article}</span>}
                       <span className="font-extrabold text-2xl" style={{ fontFamily: DISPLAY_FONT }}>{word.german}</span>
-                      <button onClick={(e) => { e.stopPropagation(); speakGerman(word.german); }} className="p-1.5 rounded-full transition-transform active:scale-90" style={{ background: th.bg, color: th.cobalt }}>
+                      <button onClick={(e) => { e.stopPropagation(); speakGerman(word.german, slowAudio); }} className="p-1.5 rounded-full transition-transform active:scale-90" style={{ background: th.bg, color: th.cobalt }}>
                         <Volume2 size={16} />
                       </button>
                     </div>
@@ -1360,7 +1362,7 @@
             </div>
             <ProgressBar value={(qIndex + (answered ? 1 : 0)) / questions.length} color={th.cobalt} track={th.border} />
             <div className="rounded-2xl p-5" style={{ background: th.card, border: `1px solid ${th.border}` }}>
-              <QuestionCard th={th} q={q} onAnswer={answerQuick} answered={answered} selected={selected} />
+              <QuestionCard th={th} q={q} onAnswer={answerQuick} answered={answered} selected={selected} slowAudio={slowAudio} />
             </div>
             {answered && <button onClick={nextQuick} className="w-full py-3 rounded-xl font-bold text-white" style={{ background: th.cobalt }}>{qIndex + 1 >= questions.length ? "Finish" : "Next"}</button>}
           </div>
@@ -1408,7 +1410,7 @@
             </div>
             <ProgressBar value={(qIndex + (answered ? 1 : 0)) / questions.length} color={th.mustard} track={th.border} />
             <div className="rounded-2xl p-5" style={{ background: th.card, border: `1px solid ${th.border}` }}>
-              <AIQuestionCard th={th} item={item} onAnswer={answerAI} answered={answered} selected={selected} />
+              <AIQuestionCard th={th} item={item} onAnswer={answerAI} answered={answered} selected={selected} slowAudio={slowAudio} />
             </div>
             {answered && <button onClick={nextAI} className="w-full py-3 rounded-xl font-bold text-white" style={{ background: th.mustard }}>{qIndex + 1 >= questions.length ? "Finish" : "Next"}</button>}
           </div>
@@ -1455,8 +1457,8 @@
       const suggestions = ["Explain \"gehen\"", "Correct: Ich gehen Schule", "How do I say I'm hungry?", "der/die/das rule?"];
 
       return (
-        <div className="flex flex-col" style={{ height: "calc(100% - 0px)" }}>
-          <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-3 pb-3" style={{ minHeight: 320, maxHeight: 420 }}>
+        <div className="flex flex-col h-full min-h-0">
+          <div ref={scrollRef} className="flex-1 h-0 overflow-y-auto space-y-3 pb-3">
             {data.teacherChat.length === 0 && (
               <div className="rounded-2xl p-4 text-sm" style={{ background: th.cobaltSoft, color: th.cobalt }}>
                 Hallo! I'm your AI German teacher. Ask me to explain a word, check your grammar, or build example sentences — all kept at your A1 level.
@@ -1471,11 +1473,11 @@
             {loading && <div className="rounded-2xl px-3.5 py-2.5 text-sm w-fit" style={{ background: th.card, border: `1px solid ${th.border}` }}><Loader2 size={14} className="animate-spin" style={{ color: th.sub }} /></div>}
           </div>
           {data.teacherChat.length === 0 && (
-            <div className="flex flex-wrap gap-2 mb-2">
+            <div className="flex flex-wrap gap-2 mb-2 shrink-0">
               {suggestions.map((s) => <button key={s} onClick={() => send(s)} className="text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: th.bg, color: th.sub }}>{s}</button>)}
             </div>
           )}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 pt-2">
             <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Ask about a word, grammar, or a sentence..."
               className="flex-1 rounded-xl px-3.5 py-3 text-sm outline-none border" style={{ background: th.card, color: th.ink, borderColor: th.border }} />
             <button onClick={() => send()} disabled={loading || !input.trim()} className="p-3 rounded-xl text-white disabled:opacity-40" style={{ background: th.cobalt }}><Send size={16} /></button>
@@ -1487,18 +1489,95 @@
     /* ============================================================
        PROFILE / STATS
        ============================================================ */
-    function ProfileView({ th, data, setData, onResetAll }) {
+    function ProfileView({ th, data, setData, onResetAll, showToast }) {
       const level = getLevelInfo(data.vocab ? data.vocab.length : 0);
       const [confirmReset, setConfirmReset] = useState(false);
       const earnedBadges = BADGE_DEFS.filter((b) => b.test(data.stats, data.quizHistory));
+      const fileRef = useRef(null);
+
+      const buyFreeze = () => {
+        if (data.stats.xp < 150) { showToast("Need 150 XP to buy a freeze!", th.brick); return; }
+        setData((prev) => ({
+          ...prev,
+          stats: {
+            ...prev.stats,
+            xp: prev.stats.xp - 150,
+            streakFreezes: (prev.stats.streakFreezes || 0) + 1,
+            history: [{ type: "shop", text: "Bought a Streak Freeze", date: new Date().toISOString(), xp: -150 }, ...prev.stats.history].slice(0, 50),
+          },
+        }));
+        showToast("Streak Freeze purchased! 🛡️", th.forest);
+      };
+
+      const useFreeze = () => {
+        if (!data.stats.streakFreezes || data.stats.streakFreezes < 1) return;
+        const today = todayStr();
+        setData((prev) => ({
+          ...prev,
+          stats: {
+            ...prev.stats,
+            streakFreezes: prev.stats.streakFreezes - 1,
+            lastStreakDate: today,
+            goalBankedUntil: today,
+            history: [{ type: "freeze", text: "Used a Streak Freeze to protect today's streak", date: new Date().toISOString(), xp: 0 }, ...prev.stats.history].slice(0, 50),
+          },
+        }));
+        showToast("Streak protected! 🛡️", th.forest);
+      };
+
+      const exportData = () => {
+        const blob = new Blob([JSON.stringify(data.vocab, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = "vokabeln-backup.json";
+        a.click(); URL.revokeObjectURL(url);
+        showToast("Vocabulary exported!", th.forest);
+      };
+
+      const importData = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const imported = JSON.parse(ev.target.result);
+            if (!Array.isArray(imported)) throw new Error("Not an array");
+            const today = todayStr();
+            const newWords = imported.map((w) => ({
+              id: uid(), german: w.german || "", english: w.english || "",
+              article: w.article || "", plural: w.plural || "",
+              example: w.example || "", exampleEn: w.exampleEn || "",
+              notes: w.notes || "", category: w.category || "Actions",
+              level: w.level || "A1", dateAdded: today, difficulty: "medium",
+              correctCount: 0, incorrectCount: 0, streakCount: 0,
+              status: "learning", nextReview: today,
+            })).filter((w) => w.german && w.english);
+            setData((prev) => ({
+              ...prev, vocab: [...prev.vocab, ...newWords],
+              stats: { ...prev.stats, totalWordsLearned: prev.vocab.length + newWords.length },
+            }));
+            showToast(`Imported ${newWords.length} words!`, th.forest);
+          } catch (err) {
+            showToast("Invalid file format.", th.brick);
+          }
+        };
+        reader.readAsText(file);
+        e.target.value = "";
+      };
+
       return (
         <div className="space-y-4 pb-4">
           <div className="rounded-3xl p-5 flex items-center gap-4" style={{ background: th.card, border: `1px solid ${th.border}` }}>
             <StampBadge value={level.index + 1} label={level.current.tag} color={th.cobalt} size={72} />
-            <div>
+            <div className="flex-1 min-w-0">
               <div className="font-extrabold text-lg" style={{ fontFamily: DISPLAY_FONT }}>{data.profile.name}</div>
               <div className="text-sm" style={{ color: th.sub }}>{level.current.name}</div>
-              <div className="text-xs mt-1" style={{ color: th.sub }}>{data.stats.xp} XP total</div>
+              <div className="flex items-center gap-3 mt-1">
+                <span className="text-xs font-bold" style={{ color: th.sub }}>{data.stats.xp} XP</span>
+                {data.stats.streakFreezes > 0 && (
+                  <span className="text-xs font-extrabold flex items-center gap-0.5 px-2 py-0.5 rounded-full" style={{ background: th.cobaltSoft, color: th.cobalt }}>🛡️ {data.stats.streakFreezes}</span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -1518,8 +1597,31 @@
             </div>
           </div>
 
+          {/* Streak Freeze Shop */}
+          <div className="rounded-2xl p-4" style={{ background: th.card, border: `1px solid ${th.border}` }}>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-base">🛡️</span>
+              <div className="font-bold text-sm">Streak Freeze Shop</div>
+            </div>
+            <div className="text-xs mb-3" style={{ color: th.sub }}>Protect your streak when you can't practice. You have <strong>{data.stats.streakFreezes || 0}</strong> freeze(s).</div>
+            <div className="flex gap-2">
+              <button onClick={buyFreeze} disabled={data.stats.xp < 150}
+                className="flex-1 py-2.5 rounded-xl font-bold text-sm border disabled:opacity-40"
+                style={data.stats.xp >= 150 ? { background: th.cobaltSoft, color: th.cobalt, borderColor: th.cobalt } : { color: th.sub, borderColor: th.border }}>
+                Buy Freeze · 150 XP
+              </button>
+              <button onClick={useFreeze} disabled={!data.stats.streakFreezes}
+                className="flex-1 py-2.5 rounded-xl font-bold text-sm border disabled:opacity-40"
+                style={data.stats.streakFreezes > 0 ? { background: th.forestSoft, color: th.forest, borderColor: th.forest } : { color: th.sub, borderColor: th.border }}>
+                Use Freeze
+              </button>
+            </div>
+          </div>
+
+          {/* Settings */}
           <div className="rounded-2xl p-4" style={{ background: th.card, border: `1px solid ${th.border}` }}>
             <div className="font-bold text-sm mb-3">Settings</div>
+
             <div className="mb-3">
               <div className="text-xs font-semibold mb-1.5" style={{ color: th.sub }}>Daily word goal</div>
               <div className="flex gap-2">
@@ -1529,16 +1631,47 @@
                 ))}
               </div>
             </div>
-            {!confirmReset ? (
-              <button onClick={() => setConfirmReset(true)} className="w-full py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-1.5" style={{ background: th.brickSoft, color: th.brick }}>
-                <RotateCcw size={14} /> Reset all progress
-              </button>
-            ) : (
-              <div className="flex gap-2">
-                <button onClick={() => setConfirmReset(false)} className="flex-1 py-2.5 rounded-xl font-semibold text-sm" style={{ background: th.bg, color: th.sub }}>Cancel</button>
-                <button onClick={onResetAll} className="flex-1 py-2.5 rounded-xl font-semibold text-sm text-white" style={{ background: th.brick }}>Confirm reset</button>
+
+            {/* Slow Audio Toggle */}
+            <div className="flex items-center justify-between py-2.5 border-t" style={{ borderColor: th.border }}>
+              <div>
+                <div className="text-sm font-semibold">🐢 Slow Pronunciation</div>
+                <div className="text-xs" style={{ color: th.sub }}>Play audio at a slower, clearer speed</div>
               </div>
-            )}
+              <button onClick={() => setData((prev) => ({ ...prev, profile: { ...prev.profile, slowAudio: !prev.profile.slowAudio } }))}
+                className="w-12 h-6 rounded-full relative transition-all flex-shrink-0"
+                style={{ background: data.profile.slowAudio ? th.cobalt : th.border }}>
+                <span className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all"
+                  style={{ left: data.profile.slowAudio ? "calc(100% - 22px)" : "2px" }} />
+              </button>
+            </div>
+
+            {/* Backup / Restore */}
+            <div className="flex items-center justify-between py-2.5 border-t" style={{ borderColor: th.border }}>
+              <div>
+                <div className="text-sm font-semibold">📂 Backup / Restore</div>
+                <div className="text-xs" style={{ color: th.sub }}>Export or import your vocabulary list</div>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={exportData} className="px-3 py-1.5 rounded-lg text-xs font-bold border" style={{ borderColor: th.border, color: th.ink }}>Export</button>
+                <button onClick={() => fileRef.current.click()} className="px-3 py-1.5 rounded-lg text-xs font-bold border" style={{ borderColor: th.cobalt, color: th.cobalt }}>Import</button>
+                <input ref={fileRef} type="file" accept=".json" className="hidden" onChange={importData} />
+              </div>
+            </div>
+
+            {/* Reset */}
+            <div className="pt-2.5 border-t" style={{ borderColor: th.border }}>
+              {!confirmReset ? (
+                <button onClick={() => setConfirmReset(true)} className="w-full py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-1.5" style={{ background: th.brickSoft, color: th.brick }}>
+                  <RotateCcw size={14} /> Reset all progress
+                </button>
+              ) : (
+                <div className="flex gap-2">
+                  <button onClick={() => setConfirmReset(false)} className="flex-1 py-2.5 rounded-xl font-semibold text-sm" style={{ background: th.bg, color: th.sub }}>Cancel</button>
+                  <button onClick={onResetAll} className="flex-1 py-2.5 rounded-xl font-semibold text-sm text-white" style={{ background: th.brick }}>Confirm reset</button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       );
@@ -1583,6 +1716,8 @@
             if (!fresh.quizHistory) fresh.quizHistory = [];
             if (!fresh.teacherChat) fresh.teacherChat = [];
             if (!fresh.stats.wordsAddedLog) fresh.stats.wordsAddedLog = {};
+            if (fresh.stats.streakFreezes === undefined) fresh.stats.streakFreezes = 0;
+            if (fresh.profile.slowAudio === undefined) fresh.profile.slowAudio = false;
             fresh = { ...fresh, stats: checkStreakDecay(fresh.stats) };
           }
           setData(fresh); setLoading(false);
@@ -1633,7 +1768,7 @@
       const th = PALETTE[data.profile.darkMode ? "dark" : "light"];
 
       return (
-        <div className="w-full mx-auto rounded-3xl overflow-hidden flex flex-col shadow-xl" style={{ maxWidth: 460, height: 780, background: th.bg, color: th.ink, fontFamily: BODY_FONT, position: "relative" }}>
+        <div className="w-full h-[100dvh] sm:h-[780px] sm:max-w-[460px] sm:rounded-3xl sm:shadow-xl overflow-hidden flex flex-col mx-auto" style={{ background: th.bg, color: th.ink, fontFamily: BODY_FONT, position: "relative" }}>
           <style>{`
             @keyframes stampFall { 0%{ transform: translateY(-20px) rotate(0deg); opacity:0;} 10%{opacity:1;} 100%{ transform: translateY(500px) rotate(360deg); opacity:0; } }
             @keyframes popIn { 0%{ transform: scale(0.85); opacity:0;} 100%{ transform: scale(1); opacity:1; } }
@@ -1645,12 +1780,12 @@
             .flipped { transform: rotateY(180deg); -webkit-transform: rotateY(180deg); }
           `}</style>
           <TopBar th={th} stats={data.stats} darkMode={data.profile.darkMode} onToggleDark={toggleDark} />
-          <div className="flex-1 overflow-y-auto px-4 pt-1">
-            {activeTab === "dashboard" && <Dashboard th={th} data={data} dueWords={dueWords} goalMetToday={goalMetToday} todayAdded={todayAdded} onGoTab={setActiveTab} />}
-            {activeTab === "vocab" && <VocabularyView th={th} data={data} setData={setData} showToast={showToast} />}
-            {activeTab === "quiz" && <QuizHub th={th} data={data} setData={setData} showToast={showToast} setCelebrate={setCelebrate} goalMetToday={goalMetToday} />}
+          <div className="flex-1 overflow-y-auto px-4 pt-1 min-h-0">
+            {activeTab === "dashboard" && <Dashboard th={th} data={data} dueWords={dueWords} goalMetToday={goalMetToday} todayAdded={todayAdded} onGoTab={setActiveTab} slowAudio={data.profile.slowAudio} />}
+            {activeTab === "vocab" && <VocabularyView th={th} data={data} setData={setData} showToast={showToast} slowAudio={data.profile.slowAudio} />}
+            {activeTab === "quiz" && <QuizHub th={th} data={data} setData={setData} showToast={showToast} setCelebrate={setCelebrate} goalMetToday={goalMetToday} slowAudio={data.profile.slowAudio} />}
             {activeTab === "teacher" && <TeacherView th={th} data={data} setData={setData} />}
-            {activeTab === "profile" && <ProfileView th={th} data={data} setData={setData} onResetAll={resetAll} />}
+            {activeTab === "profile" && <ProfileView th={th} data={data} setData={setData} onResetAll={resetAll} showToast={showToast} />}
           </div>
           <BottomNav active={activeTab} onChange={setActiveTab} th={th} />
           {celebrate && <CelebrationOverlay th={th} onDone={() => setCelebrate(false)} />}
