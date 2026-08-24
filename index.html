@@ -1,0 +1,1279 @@
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import {
+  Home, BookOpen, Brain, MessageCircle, User, Plus, X, Search, Check,
+  Trash2, Pencil, Moon, Sun, ChevronRight, ChevronLeft, Flame, Star,
+  Trophy, Loader2, Send, RotateCcw, Award, Filter, Sparkles, ArrowLeft,
+  CheckCircle2, XCircle, GraduationCap, PartyPopper, Target, Volume2,
+} from "lucide-react";
+
+/* ============================================================
+   DESIGN TOKENS
+   Bauhaus-inspired palette (cobalt / mustard / brick / forest on
+   ink & paper) paired with Archivo (display) + IBM Plex Sans (body) -
+   a nod to German functionalist design rather than a Duolingo owl.
+   ============================================================ */
+const PALETTE = {
+  light: {
+    bg: "#F1F2F5", card: "#FFFFFF", ink: "#1C1C1E", sub: "#6B6D76", border: "#E4E5EA",
+    cobalt: "#2B4C7E", mustard: "#E8A33D", brick: "#C1432E", forest: "#2F9E68",
+    cobaltSoft: "#E7EDF6", mustardSoft: "#FCF0DC", brickSoft: "#F8E4E0", forestSoft: "#E1F3E9",
+  },
+  dark: {
+    bg: "#16171B", card: "#1F2025", ink: "#F2F3F5", sub: "#9A9CA6", border: "#2C2D33",
+    cobalt: "#7EA2DB", mustard: "#F0B84C", brick: "#E1584B", forest: "#4CBE85",
+    cobaltSoft: "#22314A", mustardSoft: "#3A2E15", brickSoft: "#3A2320", forestSoft: "#173327",
+  },
+};
+const DISPLAY_FONT = "'Archivo', ui-sans-serif, system-ui, sans-serif";
+const BODY_FONT = "'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif";
+
+const LEVELS = [
+  { name: "German Beginner", tag: "Level 1", min: 0 },
+  { name: "A1 Explorer", tag: "Level 2", min: 300 },
+  { name: "A2 Learner", tag: "Level 3", min: 900 },
+  { name: "B1 Speaker", tag: "Level 4", min: 2000 },
+];
+const INTERVALS = [1, 3, 7, 14, 30, 60];
+const CATEGORIES = ["Greetings", "Family", "Jobs", "Grammar", "Food", "Drinks", "Directions", "Sports", "Feelings", "Animals", "Party", "Time", "School", "Travel", "Actions"];
+const ICONS = { Sparkles, BookOpen, Trophy, Flame, Star, Brain, GraduationCap };
+
+/* ============================================================
+   SEED VOCABULARY — imported from the learner's existing word list
+   [german, english, article|null, category]
+   ============================================================ */
+const SEED_WORDS = [
+  // Greetings & phrases
+  ["hallo", "hello", null, "Greetings"], ["tschüss", "bye", null, "Greetings"],
+  ["guten Tag", "good day", null, "Greetings"], ["bitte", "please / you're welcome", null, "Greetings"],
+  ["danke", "thank you", null, "Greetings"], ["Entschuldigung", "excuse me / sorry", null, "Greetings"],
+  ["Sorry", "sorry", null, "Greetings"], ["wie geht's", "how are you", null, "Greetings"],
+  ["hey", "hey", null, "Greetings"], ["okay", "okay", null, "Greetings"],
+  ["Ja", "yes", null, "Greetings"], ["nein", "no", null, "Greetings"],
+  ["freut mich", "nice to meet you", null, "Greetings"], ["Mach's gut", "take care", null, "Greetings"],
+  ["Keine Ahnung", "no idea", null, "Greetings"], ["Es tut mir leid", "I'm sorry", null, "Greetings"],
+  ["guck mal", "check this out", null, "Greetings"], ["sieh mal", "look at that", null, "Greetings"],
+  ["Sag einfach", "just say", null, "Greetings"], ["wirklich", "really", null, "Greetings"],
+  ["richtig", "right / correct", null, "Greetings"], ["Was ist los", "what's wrong / what's up", null, "Greetings"],
+  // Family & people
+  ["Eltern", "parents", "die", "Family"], ["Mama", "mom", null, "Family"], ["Papa", "dad", null, "Family"],
+  ["Bruder", "brother", "der", "Family"], ["Schwester", "sister", "die", "Family"],
+  ["Sohn", "son", "der", "Family"], ["Tochter", "daughter", "die", "Family"],
+  ["Mann", "man / husband", "der", "Family"], ["Frau", "woman / wife", "die", "Family"],
+  ["Freund", "friend / boyfriend", "der", "Family"],
+  ["Lisa", "Lisa (name)", null, "Family"], ["Max", "Max (name)", null, "Family"],
+  ["Mia", "Mia (name)", null, "Family"], ["Alex", "Alex (name)", null, "Family"],
+  ["David", "David (name)", null, "Family"], ["Anna", "Anna (name)", null, "Family"],
+  // Jobs
+  ["Lehrer", "teacher (m)", "der", "Jobs"], ["Lehrerin", "teacher (f)", "die", "Jobs"],
+  ["Bäcker", "baker (m)", "der", "Jobs"], ["Bäckerin", "baker (f)", "die", "Jobs"],
+  ["Verkäufer", "salesperson (m)", "der", "Jobs"], ["Verkäuferin", "salesperson (f)", "die", "Jobs"],
+  ["Musiker", "musician", "der", "Jobs"], ["Arbeit", "work / job", "die", "Jobs"],
+  // Grammar / function words
+  ["der", "the (masculine)", null, "Grammar"], ["die", "the (feminine)", null, "Grammar"],
+  ["das", "the (neuter) / that", null, "Grammar"], ["ein", "a / an (m/n)", null, "Grammar"],
+  ["eine", "a / an (f)", null, "Grammar"], ["ich", "I", null, "Grammar"], ["du", "you (informal)", null, "Grammar"],
+  ["er", "he", null, "Grammar"], ["sie", "she / they", null, "Grammar"], ["wir", "we", null, "Grammar"],
+  ["dein", "your", null, "Grammar"], ["ihm", "him (dative)", null, "Grammar"], ["uns", "us", null, "Grammar"],
+  ["ist", "is", null, "Grammar"], ["sind", "are", null, "Grammar"], ["bist", "(you) are", null, "Grammar"],
+  ["hat", "has", null, "Grammar"], ["mit", "with", null, "Grammar"], ["und", "and", null, "Grammar"],
+  ["aber", "but", null, "Grammar"], ["Oder", "or", null, "Grammar"], ["nicht", "not", null, "Grammar"],
+  ["auch", "also / too", null, "Grammar"], ["sehr", "very", null, "Grammar"], ["ganz", "whole / quite", null, "Grammar"],
+  ["zu", "to / too", null, "Grammar"], ["in", "in", null, "Grammar"], ["ins", "into the", null, "Grammar"],
+  ["was", "what", null, "Grammar"], ["wo", "where", null, "Grammar"], ["Warum", "why", null, "Grammar"],
+  ["wie", "how / like", null, "Grammar"], ["Dann", "then", null, "Grammar"], ["das ist", "that is / this is", null, "Grammar"],
+  ["ich bin", "I am", null, "Grammar"], ["kann nicht", "can't", null, "Grammar"],
+  // Food & restaurant
+  ["Restaurant", "restaurant", "das", "Food"], ["lecker", "tasty", null, "Food"], ["Wurst", "sausage", "die", "Food"],
+  ["Pizza", "pizza", "die", "Food"], ["frisch", "fresh", null, "Food"], ["Salat", "salad", "der", "Food"],
+  ["Käse", "cheese", "der", "Food"], ["Schnitzel", "schnitzel", "das", "Food"], ["Brot", "bread", "das", "Food"],
+  ["satt", "full (not hungry)", null, "Food"], ["hungrig", "hungry", null, "Food"], ["durstig", "thirsty", null, "Food"],
+  ["Suppe", "soup", "die", "Food"], ["Obst", "fruit", "das", "Food"], ["Kuchen", "cake", "der", "Food"],
+  ["Eis", "ice cream", "das", "Food"], ["Sandwich", "sandwich", "das", "Food"], ["Imbiss", "snack bar", "der", "Food"],
+  ["Brezel", "pretzel", "die", "Food"], ["Kekse", "cookies", "die", "Food"], ["Kartoffeln", "potatoes", "die", "Food"],
+  ["Eier", "eggs", "die", "Food"], ["Tisch", "table", "der", "Food"], ["Kellner", "waiter", "der", "Food"],
+  ["Glas", "glass", "das", "Food"], ["Rechnung", "bill / check", "die", "Food"], ["bar", "cash (in cash)", null, "Food"],
+  ["mit Karte", "by card", null, "Food"], ["Kosten", "costs", "die", "Food"], ["süß", "sweet", null, "Food"],
+  ["warm", "warm", null, "Food"], ["sauber", "clean", null, "Food"], ["pünktlich", "punctual / on time", null, "Food"],
+  ["höflich", "polite", null, "Food"], ["schmecken", "to taste", null, "Food"], ["riechen", "to smell", null, "Food"],
+  ["zahlen", "to pay", null, "Food"], ["komisch", "strange / weird", null, "Food"],
+  // Drinks
+  ["Wasser", "water", "das", "Drinks"], ["Milch", "milk", "die", "Drinks"], ["Tee", "tea", "der", "Drinks"],
+  ["Kaffee", "coffee", "der", "Drinks"], ["Cola", "cola", "die", "Drinks"], ["Zucker", "sugar", "der", "Drinks"],
+  ["trinken", "to drink", null, "Drinks"],
+  // Directions & city
+  ["U-Bahn", "subway", "die", "Directions"], ["rechts", "right (direction)", null, "Directions"],
+  ["links", "left (direction)", null, "Directions"], ["da drüben", "over there", null, "Directions"],
+  ["hier", "here", null, "Directions"], ["wo ist", "where is", null, "Directions"],
+  ["Park", "park", "der", "Directions"], ["Bäckerei", "bakery", "die", "Directions"],
+  ["Bibliothek", "library", "die", "Directions"], ["Stadt", "city", "die", "Directions"],
+  ["Bahnhof", "train station", "der", "Directions"], ["Hotel", "hotel", "das", "Directions"],
+  ["Café", "cafe", "das", "Directions"], ["Supermarkt", "supermarket", "der", "Directions"],
+  ["nach Hause", "(to) home", null, "Directions"], ["Toilette", "restroom", "die", "Directions"],
+  ["Handy", "cell phone", "das", "Directions"], ["Taxi", "taxi", "das", "Directions"],
+  ["geöffnet", "open", null, "Directions"],
+  // Sports
+  ["sportlich", "athletic", null, "Sports"], ["schwimmen", "to swim", null, "Sports"],
+  ["joggen", "to jog", null, "Sports"], ["wandern", "to hike", null, "Sports"], ["spielen", "to play", null, "Sports"],
+  ["Fußball", "soccer", "der", "Sports"], ["Tennis", "tennis", "das", "Sports"], ["Sport", "sports", "der", "Sports"],
+  ["Yoga", "yoga", "das", "Sports"], ["oft", "often", null, "Sports"], ["nie", "never", null, "Sports"],
+  // Feelings & description
+  ["interessant", "interesting", null, "Feelings"], ["langweilig", "boring", null, "Feelings"],
+  ["wunderbar", "wonderful", null, "Feelings"], ["fantastisch", "fantastic", null, "Feelings"],
+  ["lustig", "funny", null, "Feelings"], ["nett", "nice", null, "Feelings"], ["gut", "good", null, "Feelings"],
+  ["schlecht", "bad", null, "Feelings"], ["müde", "tired", null, "Feelings"], ["nervös", "nervous", null, "Feelings"],
+  ["aufregend", "exciting", null, "Feelings"], ["cool", "cool", null, "Feelings"], ["laut", "loud", null, "Feelings"],
+  ["stressig", "stressful", null, "Feelings"], ["schön", "beautiful / nice", null, "Feelings"],
+  ["alt", "old", null, "Feelings"], ["groß", "big / tall", null, "Feelings"], ["faul", "lazy", null, "Feelings"],
+  ["frech", "cheeky", null, "Feelings"], ["brav", "well-behaved", null, "Feelings"], ["perfekt", "perfect", null, "Feelings"],
+  ["Kreativ", "creative", null, "Feelings"], ["billig", "cheap", null, "Feelings"], ["neue", "new", null, "Feelings"],
+  ["rote", "red", null, "Feelings"], ["schwarze", "black", null, "Feelings"], ["draußen", "outside", null, "Feelings"],
+  // Animals
+  ["Haustier", "pet", "das", "Animals"], ["Hund", "dog", "der", "Animals"], ["Katze", "cat", "die", "Animals"],
+  ["Pferd", "horse", "das", "Animals"], ["Kaninchen", "rabbit", "das", "Animals"], ["Garten", "garden", "der", "Animals"],
+  // Party & objects
+  ["Party", "party", "die", "Party"], ["Musik", "music", "die", "Party"], ["Jacke", "jacket", "die", "Party"],
+  ["Schuhe", "shoes", "die", "Party"], ["Hände", "hands", "die", "Party"], ["Hilfe", "help", "die", "Party"],
+  ["Bild", "picture", "das", "Party"],
+  // Time
+  ["jetzt", "now", null, "Time"], ["heute", "today", null, "Time"], ["immer", "always", null, "Time"],
+  ["spät dran", "running late", null, "Time"], ["Zeit", "time", "die", "Time"], ["nächste Woche", "next week", null, "Time"],
+  // School
+  ["studieren", "to study", null, "School"], ["Universität", "university", "die", "School"],
+  ["Kunst", "art", "die", "School"], ["Mathe", "math", "die", "School"], ["Raum", "room", "der", "School"],
+  ["Realität", "reality", "die", "School"],
+  // Travel
+  ["London", "London", null, "Travel"], ["Berlin", "Berlin", null, "Travel"], ["Tokio", "Tokyo", null, "Travel"],
+  ["Paris", "Paris", null, "Travel"], ["Toronto", "Toronto", null, "Travel"], ["Im Ausland", "abroad", null, "Travel"],
+  ["ich komme aus", "I come from", null, "Travel"], ["aus", "from / out of", null, "Travel"],
+  ["komme", "(I) come", null, "Travel"],
+  // Actions
+  ["gehen", "to go", null, "Actions"], ["machen", "to do / make", null, "Actions"],
+  ["mache", "(I) do / make", null, "Actions"], ["will", "(I) want", null, "Actions"],
+  ["nehme", "(I) take", null, "Actions"], ["brauchen", "to need", null, "Actions"],
+  ["sprechen", "to speak", null, "Actions"], ["sieht", "(he/she) sees / looks", null, "Actions"],
+  ["kocht", "(he/she) cooks", null, "Actions"], ["fallen", "to fall", null, "Actions"],
+  ["gleichen", "to resemble", null, "Actions"], ["wohnen", "to live / reside", null, "Actions"],
+  ["besuchen", "to visit", null, "Actions"],
+];
+
+const BADGE_DEFS = [
+  { id: "first-word", label: "First Word", desc: "Add your first word", icon: "Sparkles", test: (s) => s.totalWordsLearned >= 1 },
+  { id: "fifty-words", label: "50 Words", desc: "Learn 50 words", icon: "BookOpen", test: (s) => s.totalWordsLearned >= 50 },
+  { id: "hundred-words", label: "100 Words", desc: "Learn 100 words", icon: "BookOpen", test: (s) => s.totalWordsLearned >= 100 },
+  { id: "two-fifty-words", label: "250 Words", desc: "Learn 250 words", icon: "Trophy", test: (s) => s.totalWordsLearned >= 250 },
+  { id: "streak-3", label: "3-Day Streak", desc: "Practice 3 days in a row", icon: "Flame", test: (s) => s.streak >= 3 },
+  { id: "streak-7", label: "Week Streak", desc: "Practice 7 days in a row", icon: "Flame", test: (s) => s.streak >= 7 },
+  { id: "streak-30", label: "Streak Master", desc: "Practice 30 days in a row", icon: "Flame", test: (s) => s.streak >= 30 },
+  { id: "perfect-quiz", label: "Perfectionist", desc: "Score 100% on a quiz", icon: "Star", test: (s, qh) => (qh || []).some((q) => q.perfect) },
+  { id: "quiz-10", label: "Quiz Regular", desc: "Complete 10 quizzes", icon: "Brain", test: (s, qh) => (qh || []).length >= 10 },
+  { id: "level-b1", label: "B1 Speaker", desc: "Reach the B1 Speaker level", icon: "GraduationCap", test: (s) => s.xp >= 2000 },
+];
+
+const TEACHER_SYSTEM_PROMPT = `You are a warm, encouraging German A1 teacher inside a vocabulary app. The learner is a beginner (A1 level). When asked about a word: give its meaning, its article if it's a noun, and 2 short example sentences (German + English translation). When asked about grammar: explain simply, with short examples, no jargon-heavy explanations. When asked to correct a sentence: show the corrected sentence and briefly explain the fix in one short line. Keep answers concise (under 120 words), friendly, and strictly at A1 difficulty. Use **bold** around German words/phrases.`;
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+let uidCounter = 0;
+function uid() {
+  uidCounter += 1;
+  return `w_${Date.now().toString(36)}_${uidCounter}_${Math.random().toString(36).slice(2, 7)}`;
+}
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function addDays(dateStr, n) {
+  const d = new Date(dateStr + "T00:00:00");
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+function diffDaysStr(a, b) {
+  return Math.round((new Date(a + "T00:00:00") - new Date(b + "T00:00:00")) / 86400000);
+}
+function maxDateStr(a, b) { if (!a) return b; if (!b) return a; return a > b ? a : b; }
+function fmtDate(d) { return new Date(d + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" }); }
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+function sample(arr, n) { return shuffle(arr).slice(0, n); }
+function normalizeAnswer(s) {
+  return (s || "").toLowerCase().trim().replace(/^(der|die|das)\s+/, "").replace(/[.,!?"']/g, "").replace(/\s+/g, " ");
+}
+function renderLite(text) {
+  // tiny **bold** renderer for the AI teacher chat, avoids pulling in a markdown lib
+  const parts = (text || "").split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((p, i) => p.startsWith("**") && p.endsWith("**")
+    ? <strong key={i}>{p.slice(2, -2)}</strong>
+    : <span key={i}>{p}</span>);
+}
+function getLevelInfo(xp) {
+  let idx = 0;
+  for (let i = 0; i < LEVELS.length; i++) if (xp >= LEVELS[i].min) idx = i;
+  const current = LEVELS[idx];
+  const next = LEVELS[idx + 1];
+  const progress = next ? Math.min(1, Math.max(0, (xp - current.min) / (next.min - current.min))) : 1;
+  return { index: idx, current, next, progress };
+}
+function createInitialData() {
+  const today = todayStr();
+  const vocab = SEED_WORDS.map(([de, en, article, category]) => ({
+    id: uid(), german: de, english: en, article: article || "", plural: "", example: "", exampleEn: "",
+    category, level: "A1", dateAdded: today, difficulty: "medium",
+    correctCount: 0, incorrectCount: 0, streakCount: 0, status: "learning", nextReview: today,
+  }));
+  return {
+    profile: { name: "Ahmed", dailyGoal: 10, darkMode: false, createdAt: today },
+    stats: {
+      xp: vocab.length * 5, streak: 0, lastStreakDate: null, goalBankedUntil: null,
+      totalWordsLearned: vocab.length, wordsAddedLog: {},
+      history: [{ type: "system", text: `Imported ${vocab.length} words from your existing vocabulary`, date: new Date().toISOString(), xp: vocab.length * 5 }],
+    },
+    vocab, quizHistory: [], teacherChat: [],
+  };
+}
+function checkStreakDecay(stats) {
+  const today = todayStr();
+  const ref = maxDateStr(stats.lastStreakDate, stats.goalBankedUntil);
+  if (stats.streak > 0 && ref && diffDaysStr(today, ref) > 1) return { ...stats, streak: 0 };
+  return stats;
+}
+
+/* ---------- Claude API helpers (uses the built-in Anthropic API proxy) ---------- */
+async function claudeMessages(messages, system, maxTokens = 1000) {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: maxTokens, system, messages }),
+  });
+  if (!res.ok) throw new Error(`API error ${res.status}`);
+  const data = await res.json();
+  return (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
+}
+function parseJsonLoose(text) {
+  let t = (text || "").trim();
+  t = t.replace(/^```json/i, "").replace(/^```/, "").replace(/```$/, "").trim();
+  const start = t.indexOf("["); const end = t.lastIndexOf("]");
+  if (start !== -1 && end !== -1) t = t.slice(start, end + 1);
+  return JSON.parse(t);
+}
+const AI_QUIZ_SCHEMA = {
+  "sentence-translation": `[{"prompt_en": "I drink water.", "answer_de": "Ich trinke Wasser."}]`,
+  "sentence-building": `[{"words": ["ich","trinke","Wasser"], "answer_de": "Ich trinke Wasser."}]`,
+  "fill-blank": `[{"sentence": "Ich ___ Pizza.", "options": ["esse","trinke","gehe"], "answer": "esse"}]`,
+  "conversation": `[{"lines": [{"speaker":"A","text_de":"Hallo, wie geht's?","text_en":"Hi, how are you?"},{"speaker":"B","text_de":"Gut, danke!","text_en":"Good, thanks!"}]}]`,
+  "mistake-correction": `[{"wrong_de": "Ich trinken Wasser.", "correct_de": "Ich trinke Wasser."}]`,
+};
+function buildQuizSystemPrompt(type, n) {
+  return `You create German A1 exercises for a vocabulary app. Respond with ONLY a raw JSON array of exactly ${n} items, no markdown fences, no commentary, no extra keys. Exact schema (one example item shown): ${AI_QUIZ_SCHEMA[type]}. Keep every German sentence short (max 7 words) and strictly A1-level grammar. Only use the learner's vocabulary below plus basic grammar glue words (articles, pronouns, common verb endings, prepositions). Vary sentence structure between items - do not repeat the same pattern.`;
+}
+function buildQuizUserPrompt(words, struggleWords, type, n) {
+  return `Learner's known vocabulary: ${words.join(", ")}.\nWords the learner struggles with (use these where natural): ${struggleWords.join(", ") || "none yet"}.\nGenerate ${n} "${type}" exercises now.`;
+}
+
+/* ============================================================
+   SMALL REUSABLE UI PIECES
+   ============================================================ */
+function ProgressBar({ value, color, track, height = 10 }) {
+  return (
+    <div style={{ background: track, height, borderRadius: height }} className="w-full overflow-hidden">
+      <div style={{ width: `${Math.min(100, Math.max(0, value * 100))}%`, background: color, height: "100%", borderRadius: height, transition: "width 0.6s cubic-bezier(.4,1.4,.6,1)" }} />
+    </div>
+  );
+}
+function Chip({ active, onClick, children, th, color }) {
+  const c = color || th.cobalt;
+  return (
+    <button onClick={onClick} className="px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all active:scale-95 border"
+      style={active ? { background: c, color: "#fff", borderColor: c } : { background: "transparent", color: th.sub, borderColor: th.border }}>
+      {children}
+    </button>
+  );
+}
+function StampBadge({ value, label, color, textColor = "#fff", size = 92 }) {
+  const r = size / 2 - 8;
+  const pathId = useRef(`stamp-${Math.random().toString(36).slice(2, 8)}`).current;
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <defs>
+        <path id={pathId} d={`M ${size / 2},${size / 2} m -${r},0 a ${r},${r} 0 1,1 ${r * 2},0 a ${r},${r} 0 1,1 -${r * 2},0`} />
+      </defs>
+      <circle cx={size / 2} cy={size / 2} r={r + 5} fill="none" stroke={color} strokeWidth="2" strokeDasharray="3 4" opacity="0.6" />
+      <circle cx={size / 2} cy={size / 2} r={r - 7} fill={color} />
+      <text fontSize="7.2" fontWeight="700" letterSpacing="2" fill={color}>
+        <textPath href={`#${pathId}`} startOffset="2%">{label} • {label} • </textPath>
+      </text>
+      <text x="50%" y="53%" textAnchor="middle" dominantBaseline="middle" fontSize={size * 0.26} fontWeight="800" fill={textColor} fontFamily={DISPLAY_FONT}>{value}</text>
+    </svg>
+  );
+}
+function Modal({ onClose, children, th, title }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: "rgba(0,0,0,0.5)" }} onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: th.card, color: th.ink, maxHeight: "88vh" }}
+        className="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl overflow-y-auto animate-[popIn_0.25s_ease-out]">
+        <div className="sticky top-0 flex items-center justify-between px-5 py-4 border-b" style={{ background: th.card, borderColor: th.border }}>
+          <h3 className="font-bold text-lg" style={{ fontFamily: DISPLAY_FONT }}>{title}</h3>
+          <button onClick={onClose} className="p-1.5 rounded-full" style={{ background: th.bg }}><X size={18} /></button>
+        </div>
+        <div className="p-5">{children}</div>
+      </div>
+    </div>
+  );
+}
+function FieldLabel({ children, th }) { return <label className="text-xs font-semibold mb-1 block" style={{ color: th.sub }}>{children}</label>; }
+function TextInput(props) {
+  const { th, ...rest } = props;
+  return <input {...rest} className={"w-full rounded-xl px-3 py-2.5 text-sm outline-none border " + (rest.className || "")}
+    style={{ background: th.bg, color: th.ink, borderColor: th.border }} />;
+}
+function Toast({ text, th, color }) {
+  return (
+    <div className="fixed left-1/2 z-[60] px-4 py-2 rounded-full shadow-lg text-sm font-bold text-white"
+      style={{ top: 14, transform: "translateX(-50%)", background: color || th.forest, animation: "floatUp 2s ease-out forwards" }}>
+      {text}
+    </div>
+  );
+}
+function CelebrationOverlay({ th, onDone }) {
+  useEffect(() => { const t = setTimeout(onDone, 2600); return () => clearTimeout(t); }, [onDone]);
+  const bits = useMemo(() => Array.from({ length: 26 }, (_, i) => ({
+    left: Math.random() * 100, delay: Math.random() * 0.5, color: [th.cobalt, th.mustard, th.brick, th.forest][i % 4],
+  })), [th]);
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center pointer-events-none overflow-hidden">
+      {bits.map((b, i) => (
+        <div key={i} style={{ position: "absolute", left: `${b.left}%`, top: -20, width: 8, height: 8, background: b.color, borderRadius: 2, animation: `stampFall 1.8s ease-in ${b.delay}s forwards` }} />
+      ))}
+      <div className="rounded-3xl px-8 py-6 text-center shadow-2xl animate-[popIn_0.35s_ease-out]" style={{ background: th.card, color: th.ink }}>
+        <PartyPopper size={40} style={{ color: th.mustard, margin: "0 auto 8px" }} />
+        <div className="font-extrabold text-lg" style={{ fontFamily: DISPLAY_FONT }}>Daily goal complete!</div>
+        <div className="text-sm mt-1" style={{ color: th.sub }}>Your streak is safe today 🔥</div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   TOP BAR + BOTTOM NAV
+   ============================================================ */
+function TopBar({ th, stats, darkMode, onToggleDark }) {
+  return (
+    <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
+      <div>
+        <div className="text-xs font-semibold tracking-wide" style={{ color: th.sub }}>DEUTSCH LERNEN</div>
+        <div className="font-extrabold text-lg leading-tight" style={{ fontFamily: DISPLAY_FONT }}>Vokabeln</div>
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-full" style={{ background: th.brickSoft, color: th.brick }}>
+          <Flame size={15} /><span className="text-xs font-extrabold">{stats.streak}</span>
+        </div>
+        <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-full" style={{ background: th.mustardSoft, color: th.mustard }}>
+          <Star size={15} /><span className="text-xs font-extrabold">{stats.xp}</span>
+        </div>
+        <button onClick={onToggleDark} className="p-2 rounded-full" style={{ background: th.card, border: `1px solid ${th.border}` }}>
+          {darkMode ? <Sun size={16} /> : <Moon size={16} />}
+        </button>
+      </div>
+    </div>
+  );
+}
+function BottomNav({ active, onChange, th }) {
+  const items = [
+    { id: "dashboard", icon: Home, label: "Home" },
+    { id: "vocab", icon: BookOpen, label: "Words" },
+    { id: "quiz", icon: Brain, label: "Quiz" },
+    { id: "teacher", icon: MessageCircle, label: "Teacher" },
+    { id: "profile", icon: User, label: "Profile" },
+  ];
+  return (
+    <div className="shrink-0 flex items-center justify-around px-2 py-2 border-t" style={{ background: th.card, borderColor: th.border }}>
+      {items.map((it) => {
+        const Icon = it.icon; const isActive = active === it.id;
+        return (
+          <button key={it.id} onClick={() => onChange(it.id)} className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-2xl transition-all active:scale-95"
+            style={{ background: isActive ? th.cobaltSoft : "transparent" }}>
+            <Icon size={19} style={{ color: isActive ? th.cobalt : th.sub }} />
+            <span className="text-[10px] font-semibold" style={{ color: isActive ? th.cobalt : th.sub }}>{it.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
+function Dashboard({ th, data, dueWords, goalMetToday, todayAdded, onGoTab }) {
+  const level = getLevelInfo(data.stats.xp);
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const weekLog = useMemo(() => {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = addDays(todayStr(), -i);
+      days.push({ date: d, count: data.stats.wordsAddedLog[d] || 0 });
+    }
+    return days;
+  }, [data.stats.wordsAddedLog]);
+  const maxCount = Math.max(1, ...weekLog.map((d) => d.count), data.profile.dailyGoal);
+
+  return (
+    <div className="space-y-4 pb-4">
+      <div className="rounded-3xl p-5" style={{ background: `linear-gradient(135deg, ${th.cobalt}, ${th.cobalt}CC)`, color: "#fff" }}>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-sm opacity-90">{greeting},</div>
+            <div className="font-extrabold text-2xl" style={{ fontFamily: DISPLAY_FONT }}>{data.profile.name} 👋</div>
+            <div className="text-xs mt-1 opacity-90">{level.current.tag} · {level.current.name}</div>
+          </div>
+          <StampBadge value={data.stats.streak} label="STREAK" color={th.mustard} size={78} />
+        </div>
+        <div className="mt-4">
+          <div className="flex items-center justify-between text-xs mb-1 opacity-90">
+            <span>Today's goal</span><span>{todayAdded}/{data.profile.dailyGoal} words</span>
+          </div>
+          <ProgressBar value={todayAdded / data.profile.dailyGoal} color={th.mustard} track="rgba(255,255,255,0.25)" height={11} />
+          {goalMetToday && <div className="text-xs mt-1.5 font-semibold" style={{ color: th.mustard }}>✓ Complete for today</div>}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: "Total words", value: data.stats.totalWordsLearned, color: th.cobalt, soft: th.cobaltSoft },
+          { label: "Mastered", value: data.vocab.filter((w) => w.status === "mastered").length, color: th.forest, soft: th.forestSoft },
+          { label: "Due today", value: dueWords.length, color: th.brick, soft: th.brickSoft },
+        ].map((s) => (
+          <div key={s.label} className="rounded-2xl p-3 text-center" style={{ background: s.soft }}>
+            <div className="font-extrabold text-xl" style={{ color: s.color, fontFamily: DISPLAY_FONT }}>{s.value}</div>
+            <div className="text-[11px] mt-0.5" style={{ color: th.sub }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="rounded-2xl p-4" style={{ background: th.card, border: `1px solid ${th.border}` }}>
+        <div className="flex items-center justify-between mb-2">
+          <div className="font-bold text-sm">{level.current.name}</div>
+          {level.next && <div className="text-xs" style={{ color: th.sub }}>{data.stats.xp}/{level.next.min} XP</div>}
+        </div>
+        <ProgressBar value={level.progress} color={th.forest} track={th.bg} />
+        {level.next ? <div className="text-xs mt-1.5" style={{ color: th.sub }}>{level.next.min - data.stats.xp} XP to {level.next.name}</div>
+          : <div className="text-xs mt-1.5" style={{ color: th.sub }}>Top level reached 🎉</div>}
+      </div>
+
+      <div className="rounded-2xl p-4" style={{ background: th.card, border: `1px solid ${th.border}` }}>
+        <div className="font-bold text-sm mb-2">This week</div>
+        <div className="flex items-end gap-2 h-20">
+          {weekLog.map((d) => (
+            <div key={d.date} className="flex-1 flex flex-col items-center justify-end gap-1">
+              <div className="w-full rounded-lg" style={{ height: `${Math.max(6, (d.count / maxCount) * 70)}px`, background: d.count >= data.profile.dailyGoal ? th.forest : th.cobaltSoft }} />
+              <div className="text-[9px]" style={{ color: th.sub }}>{new Date(d.date + "T00:00:00").toLocaleDateString("en", { weekday: "narrow" })}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {dueWords.length > 0 && (
+        <div className="rounded-2xl p-4" style={{ background: th.card, border: `1px solid ${th.border}` }}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="font-bold text-sm">Review today</div>
+            <button onClick={() => onGoTab("quiz")} className="text-xs font-bold flex items-center gap-0.5" style={{ color: th.cobalt }}>Practice <ChevronRight size={14} /></button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {dueWords.slice(0, 8).map((w) => (
+              <span key={w.id} className="px-2.5 py-1 rounded-full text-xs font-semibold" style={{ background: th.cobaltSoft, color: th.cobalt }}>{w.german}</span>
+            ))}
+            {dueWords.length > 8 && <span className="px-2.5 py-1 rounded-full text-xs font-semibold" style={{ color: th.sub }}>+{dueWords.length - 8} more</span>}
+          </div>
+        </div>
+      )}
+
+      <div className="rounded-2xl p-4" style={{ background: th.card, border: `1px solid ${th.border}` }}>
+        <div className="font-bold text-sm mb-2">Recent activity</div>
+        <div className="space-y-2">
+          {data.stats.history.slice(0, 5).map((h, i) => (
+            <div key={i} className="flex items-center justify-between text-sm">
+              <span style={{ color: th.ink }}>{h.text}</span>
+              <span className="text-xs font-bold" style={{ color: th.forest }}>+{h.xp} XP</span>
+            </div>
+          ))}
+          {data.stats.history.length === 0 && <div className="text-sm" style={{ color: th.sub }}>Nothing yet — add your first word!</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   VOCABULARY VIEW
+   ============================================================ */
+function WordFormModal({ th, initial, onSave, onClose }) {
+  const [form, setForm] = useState(initial || { german: "", english: "", article: "", plural: "", example: "", exampleEn: "", category: CATEGORIES[0], level: "A1" });
+  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const canSave = form.german.trim() && form.english.trim();
+  return (
+    <Modal th={th} title={initial ? "Edit word" : "Add a word"} onClose={onClose}>
+      <div className="space-y-3">
+        <div className="grid grid-cols-3 gap-2">
+          <div className="col-span-1">
+            <FieldLabel th={th}>Article</FieldLabel>
+            <select value={form.article} onChange={(e) => set("article", e.target.value)} className="w-full rounded-xl px-2 py-2.5 text-sm outline-none border"
+              style={{ background: th.bg, color: th.ink, borderColor: th.border }}>
+              <option value="">—</option><option value="der">der</option><option value="die">die</option><option value="das">das</option>
+            </select>
+          </div>
+          <div className="col-span-2">
+            <FieldLabel th={th}>German word</FieldLabel>
+            <TextInput th={th} value={form.german} onChange={(e) => set("german", e.target.value)} placeholder="Wasser" />
+          </div>
+        </div>
+        <div>
+          <FieldLabel th={th}>English meaning</FieldLabel>
+          <TextInput th={th} value={form.english} onChange={(e) => set("english", e.target.value)} placeholder="water" />
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <FieldLabel th={th}>Plural</FieldLabel>
+            <TextInput th={th} value={form.plural} onChange={(e) => set("plural", e.target.value)} placeholder="optional" />
+          </div>
+          <div>
+            <FieldLabel th={th}>Category</FieldLabel>
+            <select value={form.category} onChange={(e) => set("category", e.target.value)} className="w-full rounded-xl px-2 py-2.5 text-sm outline-none border"
+              style={{ background: th.bg, color: th.ink, borderColor: th.border }}>
+              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+        </div>
+        <div>
+          <FieldLabel th={th}>Example sentence (German)</FieldLabel>
+          <TextInput th={th} value={form.example} onChange={(e) => set("example", e.target.value)} placeholder="Ich trinke Wasser." />
+        </div>
+        <div>
+          <FieldLabel th={th}>Example translation (English)</FieldLabel>
+          <TextInput th={th} value={form.exampleEn} onChange={(e) => set("exampleEn", e.target.value)} placeholder="I drink water." />
+        </div>
+        <div>
+          <FieldLabel th={th}>Level</FieldLabel>
+          <div className="flex gap-2">
+            {["A1", "A2", "B1"].map((l) => (
+              <button key={l} onClick={() => set("level", l)} className="flex-1 py-2 rounded-xl text-sm font-bold border"
+                style={form.level === l ? { background: th.cobalt, color: "#fff", borderColor: th.cobalt } : { color: th.sub, borderColor: th.border }}>{l}</button>
+            ))}
+          </div>
+        </div>
+        <button disabled={!canSave} onClick={() => onSave(form)} className="w-full py-3 rounded-xl font-bold text-white mt-2 disabled:opacity-40"
+          style={{ background: th.cobalt }}>{initial ? "Save changes" : "Add word"}</button>
+      </div>
+    </Modal>
+  );
+}
+function WordCard({ th, word, onEdit, onDelete, onToggleMastered, confirmingDelete, onConfirmDelete }) {
+  const accuracy = word.correctCount + word.incorrectCount > 0 ? Math.round((word.correctCount / (word.correctCount + word.incorrectCount)) * 100) : null;
+  return (
+    <div className="rounded-2xl p-3.5" style={{ background: th.card, border: `1px solid ${th.border}` }}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {word.article && <span className="text-xs font-bold" style={{ color: th.cobalt }}>{word.article}</span>}
+            <span className="font-bold text-base truncate" style={{ fontFamily: DISPLAY_FONT }}>{word.german}</span>
+            {word.status === "mastered" && <CheckCircle2 size={14} style={{ color: th.forest }} />}
+          </div>
+          <div className="text-sm" style={{ color: th.sub }}>{word.english}</div>
+          {word.example && <div className="text-xs mt-1 italic" style={{ color: th.sub }}>"{word.example}"</div>}
+          <div className="flex items-center gap-2 mt-1.5">
+            <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{ background: th.cobaltSoft, color: th.cobalt }}>{word.category}</span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{ background: th.bg, color: th.sub }}>{word.level}</span>
+            {accuracy !== null && <span className="text-[10px]" style={{ color: th.sub }}>{accuracy}% correct</span>}
+          </div>
+        </div>
+        <div className="flex flex-col gap-1.5 shrink-0">
+          <button onClick={() => onEdit(word)} className="p-1.5 rounded-full" style={{ background: th.bg }}><Pencil size={13} /></button>
+          {!confirmingDelete ? (
+            <button onClick={() => onDelete(word.id)} className="p-1.5 rounded-full" style={{ background: th.bg }}><Trash2 size={13} style={{ color: th.brick }} /></button>
+          ) : (
+            <button onClick={() => onConfirmDelete(word.id)} className="p-1.5 rounded-full" style={{ background: th.brickSoft }}><Check size={13} style={{ color: th.brick }} /></button>
+          )}
+        </div>
+      </div>
+      <button onClick={() => onToggleMastered(word.id)} className="mt-2 text-[11px] font-bold px-2.5 py-1 rounded-full"
+        style={word.status === "mastered" ? { background: th.forestSoft, color: th.forest } : { background: th.bg, color: th.sub }}>
+        {word.status === "mastered" ? "Mastered" : "Mark as mastered"}
+      </button>
+    </div>
+  );
+}
+function VocabularyView({ th, data, setData, showToast }) {
+  const [search, setSearch] = useState("");
+  const [catFilter, setCatFilter] = useState("All");
+  const [levelFilter, setLevelFilter] = useState("All");
+  const [editing, setEditing] = useState(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const [confirmingId, setConfirmingId] = useState(null);
+
+  const filtered = useMemo(() => {
+    return data.vocab.filter((w) => {
+      if (catFilter !== "All" && w.category !== catFilter) return false;
+      if (levelFilter !== "All" && w.level !== levelFilter) return false;
+      if (search && !(w.german.toLowerCase().includes(search.toLowerCase()) || w.english.toLowerCase().includes(search.toLowerCase()))) return false;
+      return true;
+    }).sort((a, b) => (a.dateAdded < b.dateAdded ? 1 : -1));
+  }, [data.vocab, catFilter, levelFilter, search]);
+
+  const addWord = (form) => {
+    const today = todayStr();
+    setData((prev) => {
+      const word = { id: uid(), ...form, correctCount: 0, incorrectCount: 0, streakCount: 0, status: "learning", dateAdded: today, nextReview: today, difficulty: "medium" };
+      const vocab = [...prev.vocab, word];
+      const log = { ...prev.stats.wordsAddedLog, [today]: (prev.stats.wordsAddedLog[today] || 0) + 1 };
+      const addedToday = log[today];
+      const dailyGoal = prev.profile.dailyGoal;
+      let goalBankedUntil = prev.stats.goalBankedUntil;
+      const bankedDays = Math.floor(addedToday / dailyGoal);
+      if (bankedDays > 0) {
+        const candidate = addDays(today, bankedDays - 1);
+        if (!goalBankedUntil || candidate > goalBankedUntil) goalBankedUntil = candidate;
+      }
+      let streak = prev.stats.streak; let lastStreakDate = prev.stats.lastStreakDate;
+      const goalMetToday = goalBankedUntil && goalBankedUntil >= today;
+      if (goalMetToday && lastStreakDate !== today) {
+        if (lastStreakDate === addDays(today, -1)) streak += 1;
+        else if (!lastStreakDate || lastStreakDate < addDays(today, -1)) streak = 1;
+        lastStreakDate = today;
+      }
+      return {
+        ...prev, vocab,
+        stats: {
+          ...prev.stats, wordsAddedLog: log, goalBankedUntil, streak, lastStreakDate,
+          xp: prev.stats.xp + 5, totalWordsLearned: vocab.length,
+          history: [{ type: "add", text: `Added "${word.german}"`, date: new Date().toISOString(), xp: 5 }, ...prev.stats.history].slice(0, 50),
+        },
+      };
+    });
+    setShowAdd(false);
+    showToast("+5 XP · word added", th.forest);
+  };
+  const saveEdit = (form) => {
+    setData((prev) => ({ ...prev, vocab: prev.vocab.map((w) => (w.id === editing.id ? { ...w, ...form } : w)) }));
+    setEditing(null);
+  };
+  const deleteWord = (id) => {
+    setData((prev) => ({ ...prev, vocab: prev.vocab.filter((w) => w.id !== id), stats: { ...prev.stats, totalWordsLearned: prev.vocab.length - 1 } }));
+    setConfirmingId(null);
+  };
+  const toggleMastered = (id) => {
+    setData((prev) => ({ ...prev, vocab: prev.vocab.map((w) => (w.id === id ? { ...w, status: w.status === "mastered" ? "learning" : "mastered" } : w)) }));
+  };
+
+  return (
+    <div className="space-y-3 pb-4">
+      <div className="flex gap-2">
+        <div className="flex-1 flex items-center gap-2 rounded-xl px-3 py-2.5" style={{ background: th.card, border: `1px solid ${th.border}` }}>
+          <Search size={15} style={{ color: th.sub }} />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search words..." className="flex-1 bg-transparent outline-none text-sm" style={{ color: th.ink }} />
+        </div>
+        <button onClick={() => setShowAdd(true)} className="px-4 rounded-xl font-bold text-white flex items-center gap-1" style={{ background: th.cobalt }}>
+          <Plus size={16} /> Add
+        </button>
+      </div>
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        <Chip th={th} active={levelFilter === "All"} onClick={() => setLevelFilter("All")}>All levels</Chip>
+        {["A1", "A2", "B1"].map((l) => <Chip key={l} th={th} active={levelFilter === l} onClick={() => setLevelFilter(l)} color={th.mustard}>{l}</Chip>)}
+      </div>
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        <Chip th={th} active={catFilter === "All"} onClick={() => setCatFilter("All")}>All categories</Chip>
+        {CATEGORIES.map((c) => <Chip key={c} th={th} active={catFilter === c} onClick={() => setCatFilter(c)}>{c}</Chip>)}
+      </div>
+      <div className="text-xs" style={{ color: th.sub }}>{filtered.length} word{filtered.length !== 1 ? "s" : ""}</div>
+      <div className="space-y-2.5">
+        {filtered.map((w) => (
+          <WordCard key={w.id} th={th} word={w} onEdit={setEditing} onDelete={(id) => setConfirmingId(id)}
+            confirmingDelete={confirmingId === w.id} onConfirmDelete={deleteWord} onToggleMastered={toggleMastered} />
+        ))}
+        {filtered.length === 0 && (
+          <div className="text-center py-10" style={{ color: th.sub }}>
+            <BookOpen size={28} className="mx-auto mb-2 opacity-50" />
+            <div className="text-sm">No words match. Try a different filter, or add a new one.</div>
+          </div>
+        )}
+      </div>
+      {showAdd && <WordFormModal th={th} onSave={addWord} onClose={() => setShowAdd(false)} />}
+      {editing && <WordFormModal th={th} initial={editing} onSave={saveEdit} onClose={() => setEditing(null)} />}
+    </div>
+  );
+}
+
+/* ============================================================
+   QUIZ HUB
+   ============================================================ */
+function buildQuickQuestion(word, pool, allowedTypes) {
+  const usableTypes = allowedTypes.filter((t) => t !== "article" || word.article);
+  const type = usableTypes[Math.floor(Math.random() * usableTypes.length)];
+  const others = pool.filter((w) => w.id !== word.id);
+  if (type === "de-en" || type === "en-de") {
+    const distractors = sample(others, Math.min(3, others.length)).map((w) => (type === "de-en" ? w.english : w.german));
+    const correct = type === "de-en" ? word.english : word.german;
+    const options = shuffle([correct, ...distractors].filter((v, i, a) => a.indexOf(v) === i));
+    return { id: uid(), word, type, prompt: type === "de-en" ? word.german : word.english, options, correct };
+  }
+  if (type === "spelling") return { id: uid(), word, type, prompt: word.english, correct: word.german };
+  if (type === "article") {
+    const options = shuffle(["der", "die", "das"]);
+    return { id: uid(), word, type, prompt: word.german, options, correct: word.article };
+  }
+  return { id: uid(), word, type: "de-en", prompt: word.german, options: [word.english], correct: word.english };
+}
+function QuestionCard({ th, q, onAnswer, answered, selected }) {
+  const [typed, setTyped] = useState("");
+  if (q.type === "de-en" || q.type === "en-de" || q.type === "article") {
+    return (
+      <div>
+        <div className="text-xs font-semibold mb-1" style={{ color: th.sub }}>{q.type === "article" ? "Choose the right article" : q.type === "de-en" ? "Translate to English" : "Translate to German"}</div>
+        <div className="font-extrabold text-2xl mb-4" style={{ fontFamily: DISPLAY_FONT }}>{q.prompt}</div>
+        <div className="grid grid-cols-1 gap-2">
+          {q.options.map((opt) => {
+            let style = { background: th.bg, borderColor: th.border, color: th.ink };
+            if (answered) {
+              if (opt === q.correct) style = { background: th.forestSoft, borderColor: th.forest, color: th.forest };
+              else if (opt === selected) style = { background: th.brickSoft, borderColor: th.brick, color: th.brick };
+            }
+            return (
+              <button key={opt} disabled={answered} onClick={() => onAnswer(opt === q.correct, opt)} className="text-left px-4 py-3 rounded-xl border font-semibold text-sm transition-all active:scale-[0.98]" style={style}>
+                {opt}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+  // spelling
+  return (
+    <div>
+      <div className="text-xs font-semibold mb-1" style={{ color: th.sub }}>Type the German word</div>
+      <div className="font-extrabold text-2xl mb-4" style={{ fontFamily: DISPLAY_FONT }}>{q.prompt}</div>
+      <input value={typed} disabled={answered} onChange={(e) => setTyped(e.target.value)}
+        placeholder="Type here..." className="w-full rounded-xl px-4 py-3 text-sm outline-none border font-semibold"
+        style={{ background: th.bg, color: th.ink, borderColor: answered ? (normalizeAnswer(typed) === normalizeAnswer(q.correct) ? th.forest : th.brick) : th.border }} />
+      {answered && normalizeAnswer(typed) !== normalizeAnswer(q.correct) && (
+        <div className="text-xs mt-2" style={{ color: th.forest }}>Correct answer: <strong>{(q.word.article ? q.word.article + " " : "") + q.correct}</strong></div>
+      )}
+      {!answered && <button onClick={() => onAnswer(normalizeAnswer(typed) === normalizeAnswer(q.correct), typed)} disabled={!typed.trim()} className="w-full mt-3 py-3 rounded-xl font-bold text-white disabled:opacity-40" style={{ background: th.cobalt }}>Check</button>}
+    </div>
+  );
+}
+function AIQuestionCard({ th, item, onAnswer, answered, selected }) {
+  const [typed, setTyped] = useState("");
+  if (item.type === "conversation") {
+    return (
+      <div>
+        <div className="text-xs font-semibold mb-2" style={{ color: th.sub }}>Read the conversation</div>
+        <div className="space-y-2 mb-3">
+          {item.lines.map((l, i) => (
+            <div key={i} className="rounded-xl px-3 py-2" style={{ background: i % 2 === 0 ? th.cobaltSoft : th.bg }}>
+              <div className="text-xs font-bold" style={{ color: th.sub }}>{l.speaker}</div>
+              <div className="font-semibold text-sm">{l.text_de}</div>
+              <div className="text-xs italic" style={{ color: th.sub }}>{l.text_en}</div>
+            </div>
+          ))}
+        </div>
+        {!answered && <button onClick={() => onAnswer(true, "read")} className="w-full py-3 rounded-xl font-bold text-white" style={{ background: th.cobalt }}>Got it</button>}
+      </div>
+    );
+  }
+  if (item.type === "fill-blank") {
+    return (
+      <div>
+        <div className="text-xs font-semibold mb-1" style={{ color: th.sub }}>Fill in the blank</div>
+        <div className="font-extrabold text-xl mb-4" style={{ fontFamily: DISPLAY_FONT }}>{item.sentence}</div>
+        <div className="grid grid-cols-1 gap-2">
+          {item.options.map((opt) => {
+            let style = { background: th.bg, borderColor: th.border, color: th.ink };
+            if (answered) {
+              if (opt === item.answer) style = { background: th.forestSoft, borderColor: th.forest, color: th.forest };
+              else if (opt === selected) style = { background: th.brickSoft, borderColor: th.brick, color: th.brick };
+            }
+            return <button key={opt} disabled={answered} onClick={() => onAnswer(opt === item.answer, opt)} className="text-left px-4 py-3 rounded-xl border font-semibold text-sm" style={style}>{opt}</button>;
+          })}
+        </div>
+      </div>
+    );
+  }
+  if (item.type === "sentence-building") {
+    return <SentenceBuilder th={th} item={item} onAnswer={onAnswer} answered={answered} />;
+  }
+  // sentence-translation & mistake-correction: free text
+  const prompt = item.type === "sentence-translation" ? item.prompt_en : item.wrong_de;
+  const answerKey = item.type === "sentence-translation" ? item.answer_de : item.correct_de;
+  return (
+    <div>
+      <div className="text-xs font-semibold mb-1" style={{ color: th.sub }}>{item.type === "sentence-translation" ? "Translate to German" : "Fix the mistake"}</div>
+      <div className="font-extrabold text-xl mb-4" style={{ fontFamily: DISPLAY_FONT }}>{prompt}</div>
+      <input value={typed} disabled={answered} onChange={(e) => setTyped(e.target.value)} placeholder="Type your answer..."
+        className="w-full rounded-xl px-4 py-3 text-sm outline-none border font-semibold"
+        style={{ background: th.bg, color: th.ink, borderColor: answered ? (normalizeAnswer(typed) === normalizeAnswer(answerKey) ? th.forest : th.brick) : th.border }} />
+      {answered && <div className="text-xs mt-2" style={{ color: th.forest }}>Model answer: <strong>{answerKey}</strong></div>}
+      {!answered && <button onClick={() => onAnswer(normalizeAnswer(typed) === normalizeAnswer(answerKey), typed)} disabled={!typed.trim()} className="w-full mt-3 py-3 rounded-xl font-bold text-white disabled:opacity-40" style={{ background: th.cobalt }}>Check</button>}
+    </div>
+  );
+}
+function SentenceBuilder({ th, item, onAnswer, answered }) {
+  const [chosen, setChosen] = useState([]);
+  const [bank, setBank] = useState(() => shuffle(item.words));
+  const pick = (w, i) => { setChosen((c) => [...c, w]); setBank((b) => b.filter((_, idx) => idx !== i)); };
+  const remove = (i) => { setBank((b) => [...b, chosen[i]]); setChosen((c) => c.filter((_, idx) => idx !== i)); };
+  const submit = () => onAnswer(normalizeAnswer(chosen.join(" ")) === normalizeAnswer(item.answer_de), chosen.join(" "));
+  return (
+    <div>
+      <div className="text-xs font-semibold mb-1" style={{ color: th.sub }}>Build the sentence</div>
+      <div className="min-h-[46px] flex flex-wrap gap-2 rounded-xl border p-2 mb-3" style={{ borderColor: th.border, background: th.bg }}>
+        {chosen.map((w, i) => (
+          <button key={i} onClick={() => !answered && remove(i)} className="px-3 py-1.5 rounded-lg font-semibold text-sm text-white" style={{ background: th.cobalt }}>{w}</button>
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-2 mb-3">
+        {bank.map((w, i) => (
+          <button key={i} disabled={answered} onClick={() => pick(w, i)} className="px-3 py-1.5 rounded-lg font-semibold text-sm border" style={{ borderColor: th.border, color: th.ink }}>{w}</button>
+        ))}
+      </div>
+      {answered && <div className="text-xs mb-2" style={{ color: th.forest }}>Correct: <strong>{item.answer_de}</strong></div>}
+      {!answered && <button onClick={submit} disabled={bank.length > 0} className="w-full py-3 rounded-xl font-bold text-white disabled:opacity-40" style={{ background: th.cobalt }}>Check</button>}
+    </div>
+  );
+}
+
+const QUICK_TYPES = [
+  { id: "de-en", label: "German → English" }, { id: "en-de", label: "English → German" },
+  { id: "spelling", label: "Spelling" }, { id: "article", label: "Article (der/die/das)" },
+];
+const AI_TYPES = [
+  { id: "sentence-translation", label: "Sentence translation" }, { id: "sentence-building", label: "Sentence building" },
+  { id: "fill-blank", label: "Fill in the blank" }, { id: "conversation", label: "Conversation practice" },
+  { id: "mistake-correction", label: "Mistake correction" },
+];
+
+function QuizHub({ th, data, setData, showToast, setCelebrate, goalMetToday }) {
+  const [mode, setMode] = useState("menu"); // menu | quick-setup | quick-session | ai-setup | ai-loading | ai-session | ai-error | summary
+  const [quickTypes, setQuickTypes] = useState(["de-en", "en-de"]);
+  const [aiType, setAiType] = useState("sentence-translation");
+  const [count, setCount] = useState(8);
+  const [questions, setQuestions] = useState([]);
+  const [qIndex, setQIndex] = useState(0);
+  const [answered, setAnswered] = useState(false);
+  const [selected, setSelected] = useState(null);
+  const [correctSoFar, setCorrectSoFar] = useState(0);
+  const [aiError, setAiError] = useState("");
+
+  const dueSorted = useMemo(() => {
+    const today = todayStr();
+    return [...data.vocab].sort((a, b) => {
+      const aDue = a.nextReview <= today ? 0 : 1; const bDue = b.nextReview <= today ? 0 : 1;
+      if (aDue !== bDue) return aDue - bDue;
+      return (b.incorrectCount - b.correctCount) - (a.incorrectCount - a.correctCount);
+    });
+  }, [data.vocab]);
+  const struggleWords = useMemo(() => data.vocab.filter((w) => w.incorrectCount > w.correctCount).map((w) => w.german), [data.vocab]);
+
+  const applyWordResult = useCallback((wordId, correct) => {
+    setData((prev) => {
+      const today = todayStr();
+      const vocab = prev.vocab.map((w) => {
+        if (w.id !== wordId) return w;
+        if (correct) {
+          const streakCount = (w.streakCount || 0) + 1;
+          const interval = INTERVALS[Math.min(streakCount - 1, INTERVALS.length - 1)];
+          return { ...w, correctCount: w.correctCount + 1, streakCount, nextReview: addDays(today, interval), status: streakCount >= 5 ? "mastered" : w.status, difficulty: "easy" };
+        }
+        return { ...w, incorrectCount: w.incorrectCount + 1, streakCount: 0, nextReview: addDays(today, 1), status: w.status === "mastered" ? "learning" : w.status, difficulty: "hard" };
+      });
+      return { ...prev, vocab };
+    });
+  }, [setData]);
+
+  const finishQuiz = useCallback((totalCorrect, total) => {
+    const perfect = totalCorrect === total && total > 0;
+    const xpGain = perfect ? 50 : 20;
+    setData((prev) => ({
+      ...prev,
+      quizHistory: [{ date: new Date().toISOString(), score: totalCorrect, total, perfect }, ...prev.quizHistory].slice(0, 100),
+      stats: {
+        ...prev.stats, xp: prev.stats.xp + xpGain,
+        history: [{ type: "quiz", text: perfect ? "Perfect quiz score!" : `Completed a quiz (${totalCorrect}/${total})`, date: new Date().toISOString(), xp: xpGain }, ...prev.stats.history].slice(0, 50),
+      },
+    }));
+    showToast(`+${xpGain} XP${perfect ? " · Perfect!" : ""}`, perfect ? th.mustard : th.forest);
+    setMode("summary");
+  }, [setData, showToast, th]);
+
+  const startQuick = () => {
+    const chosen = dueSorted.slice(0, Math.min(count, dueSorted.length));
+    if (chosen.length === 0) { setMode("menu"); return; }
+    const qs = chosen.map((w) => buildQuickQuestion(w, data.vocab, quickTypes.length ? quickTypes : ["de-en"]));
+    setQuestions(qs); setQIndex(0); setAnswered(false); setSelected(null); setCorrectSoFar(0); setMode("quick-session");
+  };
+  const answerQuick = (isCorrect, sel) => {
+    setAnswered(true); setSelected(sel);
+    applyWordResult(questions[qIndex].word.id, isCorrect);
+    if (isCorrect) setCorrectSoFar((c) => c + 1);
+  };
+  const nextQuick = () => {
+    if (qIndex + 1 >= questions.length) { finishQuiz(correctSoFar, questions.length); return; }
+    setQIndex((i) => i + 1); setAnswered(false); setSelected(null);
+  };
+
+  const startAI = async () => {
+    setMode("ai-loading"); setAiError("");
+    try {
+      const wordSample = sample(data.vocab, Math.min(50, data.vocab.length)).map((w) => (w.article ? w.article + " " : "") + w.german);
+      const system = buildQuizSystemPrompt(aiType, Math.min(count, 6));
+      const user = buildQuizUserPrompt(wordSample, struggleWords.slice(0, 15), aiType, Math.min(count, 6));
+      const text = await claudeMessages([{ role: "user", content: user }], system, 1000);
+      const items = parseJsonLoose(text).map((it) => ({ ...it, id: uid(), type: aiType }));
+      if (!items.length) throw new Error("empty");
+      setQuestions(items); setQIndex(0); setAnswered(false); setSelected(null); setCorrectSoFar(0); setMode("ai-session");
+    } catch (e) {
+      setAiError("Couldn't reach the AI teacher to generate this quiz. Check your connection and try again.");
+      setMode("ai-error");
+    }
+  };
+  const answerAI = (isCorrect, sel) => { setAnswered(true); setSelected(sel); if (isCorrect) setCorrectSoFar((c) => c + 1); };
+  const nextAI = () => {
+    if (qIndex + 1 >= questions.length) { finishQuiz(correctSoFar, questions.length); return; }
+    setQIndex((i) => i + 1); setAnswered(false); setSelected(null);
+  };
+
+  useEffect(() => { if (mode === "summary" && goalMetToday) setCelebrate(true); }, [mode]); // eslint-disable-line
+
+  if (mode === "menu") {
+    return (
+      <div className="space-y-4 pb-4">
+        <div className="rounded-2xl p-4" style={{ background: th.card, border: `1px solid ${th.border}` }}>
+          <div className="flex items-center gap-2 mb-1"><Target size={16} style={{ color: th.cobalt }} /><div className="font-bold text-sm">Quick Quiz</div></div>
+          <div className="text-xs mb-3" style={{ color: th.sub }}>Instant, offline-friendly practice using your saved words. {dueSorted.length} word{dueSorted.length !== 1 ? "s" : ""} ready to review.</div>
+          <button onClick={() => setMode("quick-setup")} disabled={data.vocab.length === 0} className="w-full py-3 rounded-xl font-bold text-white disabled:opacity-40" style={{ background: th.cobalt }}>Start quick quiz</button>
+        </div>
+        <div className="rounded-2xl p-4" style={{ background: th.card, border: `1px solid ${th.border}` }}>
+          <div className="flex items-center gap-2 mb-1"><Sparkles size={16} style={{ color: th.mustard }} /><div className="font-bold text-sm">AI Quiz</div></div>
+          <div className="text-xs mb-3" style={{ color: th.sub }}>Fresh sentences, conversations, and mistake-correction exercises generated from your own vocabulary.</div>
+          <button onClick={() => setMode("ai-setup")} disabled={data.vocab.length < 5} className="w-full py-3 rounded-xl font-bold text-white disabled:opacity-40" style={{ background: th.mustard }}>Start AI quiz</button>
+          {data.vocab.length < 5 && <div className="text-[11px] mt-1.5" style={{ color: th.sub }}>Add at least 5 words to unlock AI quizzes.</div>}
+        </div>
+      </div>
+    );
+  }
+  if (mode === "quick-setup") {
+    return (
+      <div className="space-y-4 pb-4">
+        <button onClick={() => setMode("menu")} className="flex items-center gap-1 text-sm font-semibold" style={{ color: th.sub }}><ArrowLeft size={15} /> Back</button>
+        <div className="rounded-2xl p-4" style={{ background: th.card, border: `1px solid ${th.border}` }}>
+          <div className="font-bold text-sm mb-2">Question types</div>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {QUICK_TYPES.map((t) => (
+              <Chip key={t.id} th={th} active={quickTypes.includes(t.id)} onClick={() => setQuickTypes((qt) => qt.includes(t.id) ? qt.filter((x) => x !== t.id) : [...qt, t.id])}>{t.label}</Chip>
+            ))}
+          </div>
+          <div className="font-bold text-sm mb-2">Number of questions</div>
+          <div className="flex gap-2 mb-4">
+            {[5, 8, 12].map((n) => <button key={n} onClick={() => setCount(n)} className="flex-1 py-2 rounded-xl font-bold text-sm border" style={count === n ? { background: th.cobalt, color: "#fff", borderColor: th.cobalt } : { color: th.sub, borderColor: th.border }}>{n}</button>)}
+          </div>
+          <button onClick={startQuick} disabled={quickTypes.length === 0} className="w-full py-3 rounded-xl font-bold text-white disabled:opacity-40" style={{ background: th.cobalt }}>Start</button>
+        </div>
+      </div>
+    );
+  }
+  if (mode === "quick-session") {
+    const q = questions[qIndex];
+    return (
+      <div className="space-y-4 pb-4">
+        <div className="flex items-center justify-between">
+          <button onClick={() => setMode("menu")} className="p-1"><X size={18} style={{ color: th.sub }} /></button>
+          <div className="text-xs font-semibold" style={{ color: th.sub }}>{qIndex + 1} / {questions.length}</div>
+        </div>
+        <ProgressBar value={(qIndex + (answered ? 1 : 0)) / questions.length} color={th.cobalt} track={th.border} />
+        <div className="rounded-2xl p-5" style={{ background: th.card, border: `1px solid ${th.border}` }}>
+          <QuestionCard th={th} q={q} onAnswer={answerQuick} answered={answered} selected={selected} />
+        </div>
+        {answered && <button onClick={nextQuick} className="w-full py-3 rounded-xl font-bold text-white" style={{ background: th.cobalt }}>{qIndex + 1 >= questions.length ? "Finish" : "Next"}</button>}
+      </div>
+    );
+  }
+  if (mode === "ai-setup") {
+    return (
+      <div className="space-y-4 pb-4">
+        <button onClick={() => setMode("menu")} className="flex items-center gap-1 text-sm font-semibold" style={{ color: th.sub }}><ArrowLeft size={15} /> Back</button>
+        <div className="rounded-2xl p-4" style={{ background: th.card, border: `1px solid ${th.border}` }}>
+          <div className="font-bold text-sm mb-2">Exercise type</div>
+          <div className="space-y-2 mb-4">
+            {AI_TYPES.map((t) => (
+              <button key={t.id} onClick={() => setAiType(t.id)} className="w-full text-left px-3 py-2.5 rounded-xl border text-sm font-semibold"
+                style={aiType === t.id ? { background: th.mustardSoft, borderColor: th.mustard, color: th.mustard } : { borderColor: th.border, color: th.ink }}>{t.label}</button>
+            ))}
+          </div>
+          <div className="font-bold text-sm mb-2">Number of questions</div>
+          <div className="flex gap-2 mb-4">
+            {[3, 5, 6].map((n) => <button key={n} onClick={() => setCount(n)} className="flex-1 py-2 rounded-xl font-bold text-sm border" style={count === n ? { background: th.mustard, color: "#fff", borderColor: th.mustard } : { color: th.sub, borderColor: th.border }}>{n}</button>)}
+          </div>
+          <button onClick={startAI} className="w-full py-3 rounded-xl font-bold text-white" style={{ background: th.mustard }}>Generate quiz</button>
+        </div>
+      </div>
+    );
+  }
+  if (mode === "ai-loading") {
+    return <div className="flex flex-col items-center justify-center py-24"><Loader2 size={28} className="animate-spin mb-3" style={{ color: th.mustard }} /><div className="text-sm" style={{ color: th.sub }}>Writing your exercises...</div></div>;
+  }
+  if (mode === "ai-error") {
+    return (
+      <div className="text-center py-16 px-4">
+        <div className="text-sm mb-4" style={{ color: th.sub }}>{aiError}</div>
+        <button onClick={startAI} className="px-5 py-2.5 rounded-xl font-bold text-white" style={{ background: th.mustard }}>Try again</button>
+      </div>
+    );
+  }
+  if (mode === "ai-session") {
+    const item = questions[qIndex];
+    return (
+      <div className="space-y-4 pb-4">
+        <div className="flex items-center justify-between">
+          <button onClick={() => setMode("menu")} className="p-1"><X size={18} style={{ color: th.sub }} /></button>
+          <div className="text-xs font-semibold" style={{ color: th.sub }}>{qIndex + 1} / {questions.length}</div>
+        </div>
+        <ProgressBar value={(qIndex + (answered ? 1 : 0)) / questions.length} color={th.mustard} track={th.border} />
+        <div className="rounded-2xl p-5" style={{ background: th.card, border: `1px solid ${th.border}` }}>
+          <AIQuestionCard th={th} item={item} onAnswer={answerAI} answered={answered} selected={selected} />
+        </div>
+        {answered && <button onClick={nextAI} className="w-full py-3 rounded-xl font-bold text-white" style={{ background: th.mustard }}>{qIndex + 1 >= questions.length ? "Finish" : "Next"}</button>}
+      </div>
+    );
+  }
+  if (mode === "summary") {
+    const pct = questions.length ? Math.round((correctSoFar / questions.length) * 100) : 0;
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <Trophy size={44} style={{ color: th.mustard }} className="mb-3" />
+        <div className="font-extrabold text-2xl mb-1" style={{ fontFamily: DISPLAY_FONT }}>{correctSoFar}/{questions.length} correct</div>
+        <div className="text-sm mb-6" style={{ color: th.sub }}>{pct}% accuracy this round</div>
+        <button onClick={() => setMode("menu")} className="px-6 py-3 rounded-xl font-bold text-white" style={{ background: th.cobalt }}>Back to quizzes</button>
+      </div>
+    );
+  }
+  return null;
+}
+
+/* ============================================================
+   AI TEACHER
+   ============================================================ */
+function TeacherView({ th, data, setData }) {
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const scrollRef = useRef(null);
+  useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }); }, [data.teacherChat, loading]);
+
+  const send = async (text) => {
+    const msg = (text || input).trim();
+    if (!msg || loading) return;
+    setInput(""); setLoading(true);
+    const history = [...data.teacherChat, { role: "user", content: msg }].slice(-40);
+    setData((prev) => ({ ...prev, teacherChat: history }));
+    try {
+      const apiMessages = history.map((m) => ({ role: m.role, content: m.content }));
+      const contextNote = `(Learner context: knows ${data.vocab.length} words, currently at ${getLevelInfo(data.stats.xp).current.name} level.)`;
+      const reply = await claudeMessages(apiMessages, TEACHER_SYSTEM_PROMPT + " " + contextNote, 1000);
+      setData((prev) => ({ ...prev, teacherChat: [...prev.teacherChat, { role: "assistant", content: reply || "Sorry, I couldn't come up with an answer — try asking again." }].slice(-40) }));
+    } catch (e) {
+      setData((prev) => ({ ...prev, teacherChat: [...prev.teacherChat, { role: "assistant", content: "I couldn't reach the AI teacher right now. Check your connection and try again." }].slice(-40) }));
+    } finally { setLoading(false); }
+  };
+  const suggestions = ["Explain \"gehen\"", "Correct: Ich gehen Schule", "How do I say I'm hungry?", "der/die/das rule?"];
+
+  return (
+    <div className="flex flex-col" style={{ height: "calc(100% - 0px)" }}>
+      <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-3 pb-3" style={{ minHeight: 320, maxHeight: 420 }}>
+        {data.teacherChat.length === 0 && (
+          <div className="rounded-2xl p-4 text-sm" style={{ background: th.cobaltSoft, color: th.cobalt }}>
+            Hallo! I'm your AI German teacher. Ask me to explain a word, check your grammar, or build example sentences — all kept at your A1 level.
+          </div>
+        )}
+        {data.teacherChat.map((m, i) => (
+          <div key={i} className={"max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm " + (m.role === "user" ? "ml-auto" : "")}
+            style={m.role === "user" ? { background: th.cobalt, color: "#fff" } : { background: th.card, color: th.ink, border: `1px solid ${th.border}` }}>
+            {renderLite(m.content)}
+          </div>
+        ))}
+        {loading && <div className="rounded-2xl px-3.5 py-2.5 text-sm w-fit" style={{ background: th.card, border: `1px solid ${th.border}` }}><Loader2 size={14} className="animate-spin" style={{ color: th.sub }} /></div>}
+      </div>
+      {data.teacherChat.length === 0 && (
+        <div className="flex flex-wrap gap-2 mb-2">
+          {suggestions.map((s) => <button key={s} onClick={() => send(s)} className="text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: th.bg, color: th.sub }}>{s}</button>)}
+        </div>
+      )}
+      <div className="flex items-center gap-2 shrink-0">
+        <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder="Ask about a word, grammar, or a sentence..."
+          className="flex-1 rounded-xl px-3.5 py-3 text-sm outline-none border" style={{ background: th.card, color: th.ink, borderColor: th.border }} />
+        <button onClick={() => send()} disabled={loading || !input.trim()} className="p-3 rounded-xl text-white disabled:opacity-40" style={{ background: th.cobalt }}><Send size={16} /></button>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   PROFILE / STATS
+   ============================================================ */
+function ProfileView({ th, data, setData, onResetAll }) {
+  const level = getLevelInfo(data.stats.xp);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const earnedBadges = BADGE_DEFS.filter((b) => b.test(data.stats, data.quizHistory));
+  return (
+    <div className="space-y-4 pb-4">
+      <div className="rounded-3xl p-5 flex items-center gap-4" style={{ background: th.card, border: `1px solid ${th.border}` }}>
+        <StampBadge value={level.index + 1} label={level.current.tag} color={th.cobalt} size={72} />
+        <div>
+          <div className="font-extrabold text-lg" style={{ fontFamily: DISPLAY_FONT }}>{data.profile.name}</div>
+          <div className="text-sm" style={{ color: th.sub }}>{level.current.name}</div>
+          <div className="text-xs mt-1" style={{ color: th.sub }}>{data.stats.xp} XP total</div>
+        </div>
+      </div>
+
+      <div className="rounded-2xl p-4" style={{ background: th.card, border: `1px solid ${th.border}` }}>
+        <div className="font-bold text-sm mb-3">Achievements ({earnedBadges.length}/{BADGE_DEFS.length})</div>
+        <div className="grid grid-cols-3 gap-3">
+          {BADGE_DEFS.map((b) => {
+            const earned = earnedBadges.includes(b);
+            const Icon = ICONS[b.icon] || Award;
+            return (
+              <div key={b.id} className="rounded-xl p-3 text-center" style={{ background: earned ? th.mustardSoft : th.bg, opacity: earned ? 1 : 0.5 }}>
+                <Icon size={20} style={{ color: earned ? th.mustard : th.sub, margin: "0 auto 4px" }} />
+                <div className="text-[10px] font-bold leading-tight">{b.label}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="rounded-2xl p-4" style={{ background: th.card, border: `1px solid ${th.border}` }}>
+        <div className="font-bold text-sm mb-3">Settings</div>
+        <div className="mb-3">
+          <div className="text-xs font-semibold mb-1.5" style={{ color: th.sub }}>Daily word goal</div>
+          <div className="flex gap-2">
+            {[5, 10, 15, 20].map((n) => (
+              <button key={n} onClick={() => setData((prev) => ({ ...prev, profile: { ...prev.profile, dailyGoal: n } }))}
+                className="flex-1 py-2 rounded-xl font-bold text-sm border" style={data.profile.dailyGoal === n ? { background: th.cobalt, color: "#fff", borderColor: th.cobalt } : { color: th.sub, borderColor: th.border }}>{n}</button>
+            ))}
+          </div>
+        </div>
+        {!confirmReset ? (
+          <button onClick={() => setConfirmReset(true)} className="w-full py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-1.5" style={{ background: th.brickSoft, color: th.brick }}>
+            <RotateCcw size={14} /> Reset all progress
+          </button>
+        ) : (
+          <div className="flex gap-2">
+            <button onClick={() => setConfirmReset(false)} className="flex-1 py-2.5 rounded-xl font-semibold text-sm" style={{ background: th.bg, color: th.sub }}>Cancel</button>
+            <button onClick={onResetAll} className="flex-1 py-2.5 rounded-xl font-semibold text-sm text-white" style={{ background: th.brick }}>Confirm reset</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   APP ROOT
+   ============================================================ */
+export default function App() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [toast, setToast] = useState(null);
+  const [celebrate, setCelebrate] = useState(false);
+  const saveTimer = useRef(null);
+  const prevGoalMet = useRef(false);
+
+  useEffect(() => {
+    const linkId = "gv-fonts-link";
+    if (!document.getElementById(linkId)) {
+      const link = document.createElement("link");
+      link.id = linkId; link.rel = "stylesheet";
+      link.href = "https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap";
+      document.head.appendChild(link);
+    }
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      let fresh = null;
+      try {
+        const res = await window.storage.get("appData", false);
+        fresh = res ? JSON.parse(res.value) : null;
+      } catch (e) { fresh = null; }
+      if (!fresh) {
+        fresh = createInitialData();
+        try { await window.storage.set("appData", JSON.stringify(fresh), false); } catch (e) {}
+      } else {
+        fresh = { ...fresh, stats: checkStreakDecay(fresh.stats) };
+      }
+      setData(fresh); setLoading(false);
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (loading || !data) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => { window.storage.set("appData", JSON.stringify(data), false).catch(() => {}); }, 500);
+    return () => clearTimeout(saveTimer.current);
+  }, [data, loading]);
+
+  const showToast = useCallback((text, color) => {
+    setToast({ text, color, key: Date.now() });
+    setTimeout(() => setToast(null), 1900);
+  }, []);
+
+  const dueWords = useMemo(() => {
+    if (!data) return [];
+    const today = todayStr();
+    return data.vocab.filter((w) => w.nextReview <= today);
+  }, [data]);
+  const todayAdded = data ? (data.stats.wordsAddedLog[todayStr()] || 0) : 0;
+  const goalMetToday = data ? (data.stats.goalBankedUntil && data.stats.goalBankedUntil >= todayStr()) : false;
+
+  useEffect(() => {
+    if (goalMetToday && !prevGoalMet.current) setCelebrate(true);
+    prevGoalMet.current = goalMetToday;
+  }, [goalMetToday]);
+
+  const toggleDark = () => setData((prev) => ({ ...prev, profile: { ...prev.profile, darkMode: !prev.profile.darkMode } }));
+  const resetAll = async () => {
+    const fresh = createInitialData();
+    setData(fresh);
+    try { await window.storage.set("appData", JSON.stringify(fresh), false); } catch (e) {}
+    setActiveTab("dashboard");
+  };
+
+  if (loading || !data) {
+    return (
+      <div className="w-full flex items-center justify-center" style={{ minHeight: 500, fontFamily: BODY_FONT }}>
+        <Loader2 size={26} className="animate-spin" style={{ color: "#2B4C7E" }} />
+      </div>
+    );
+  }
+
+  const th = PALETTE[data.profile.darkMode ? "dark" : "light"];
+
+  return (
+    <div className="w-full mx-auto rounded-3xl overflow-hidden flex flex-col shadow-xl" style={{ maxWidth: 460, height: 780, background: th.bg, color: th.ink, fontFamily: BODY_FONT, position: "relative" }}>
+      <style>{`
+        @keyframes stampFall { 0%{ transform: translateY(-20px) rotate(0deg); opacity:0;} 10%{opacity:1;} 100%{ transform: translateY(500px) rotate(360deg); opacity:0; } }
+        @keyframes popIn { 0%{ transform: scale(0.85); opacity:0;} 100%{ transform: scale(1); opacity:1; } }
+        @keyframes floatUp { 0%{ transform: translate(-50%,0); opacity:1;} 80%{ opacity:1;} 100%{ transform: translate(-50%,-30px); opacity:0; } }
+      `}</style>
+      <TopBar th={th} stats={data.stats} darkMode={data.profile.darkMode} onToggleDark={toggleDark} />
+      <div className="flex-1 overflow-y-auto px-4 pt-1">
+        {activeTab === "dashboard" && <Dashboard th={th} data={data} dueWords={dueWords} goalMetToday={goalMetToday} todayAdded={todayAdded} onGoTab={setActiveTab} />}
+        {activeTab === "vocab" && <VocabularyView th={th} data={data} setData={setData} showToast={showToast} />}
+        {activeTab === "quiz" && <QuizHub th={th} data={data} setData={setData} showToast={showToast} setCelebrate={setCelebrate} goalMetToday={goalMetToday} />}
+        {activeTab === "teacher" && <TeacherView th={th} data={data} setData={setData} />}
+        {activeTab === "profile" && <ProfileView th={th} data={data} setData={setData} onResetAll={resetAll} />}
+      </div>
+      <BottomNav active={activeTab} onChange={setActiveTab} th={th} />
+      {celebrate && <CelebrationOverlay th={th} onDone={() => setCelebrate(false)} />}
+      {toast && <Toast key={toast.key} text={toast.text} color={toast.color} th={th} />}
+    </div>
+  );
+}
