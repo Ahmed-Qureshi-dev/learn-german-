@@ -494,8 +494,10 @@
     let germanVoice = null;
     function loadGermanVoice() {
       if ("speechSynthesis" in window) {
-        const voices = window.speechSynthesis.getVoices();
-        germanVoice = voices.find((v) => v.lang === "de-DE" || v.lang.startsWith("de")) || null;
+        try {
+          const voices = window.speechSynthesis.getVoices() || [];
+          germanVoice = voices.find((v) => v.lang === "de-DE" || v.lang === "de_DE" || (v.lang && v.lang.toLowerCase().startsWith("de"))) || null;
+        } catch(e) {}
       }
     }
     if ("speechSynthesis" in window) {
@@ -505,21 +507,79 @@
       }
     }
 
-    function fallbackAudioTTS(text) {
-      try {
-        const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=de&client=tw-ob&q=${encodeURIComponent(text)}`;
-        const audio = new Audio(url);
-        audio.play().catch(() => {});
-      } catch (err) {}
+    // Appilix / Mobile WebView Audio Auto-Unlocker
+    let globalAudioPlayer = null;
+    let audioUnlocked = false;
+
+    function unlockAudioContext() {
+      if (!audioUnlocked) {
+        audioUnlocked = true;
+        try {
+          if (!globalAudioPlayer) {
+            globalAudioPlayer = new Audio();
+          }
+          globalAudioPlayer.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
+          globalAudioPlayer.play().catch(() => {});
+        } catch(e) {}
+      }
+    }
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("click", unlockAudioContext, { passive: true });
+      window.addEventListener("touchstart", unlockAudioContext, { passive: true });
+    }
+
+    function playWebViewAudio(text) {
+      if (!text) return;
+      const cleanText = text.trim();
+      const encoded = encodeURIComponent(cleanText);
+
+      const sources = [
+        `https://dict.youdao.com/dictvoice?audio=${encoded}&type=2`,
+        `https://translate.google.com/translate_tts?ie=UTF-8&tl=de&client=tw-ob&q=${encoded}`
+      ];
+
+      if (!globalAudioPlayer) {
+        globalAudioPlayer = new Audio();
+      }
+
+      let srcIdx = 0;
+      const playCurrent = () => {
+        if (srcIdx >= sources.length) return;
+        try {
+          globalAudioPlayer.pause();
+          globalAudioPlayer.src = sources[srcIdx];
+          globalAudioPlayer.load();
+          const promise = globalAudioPlayer.play();
+          if (promise !== undefined) {
+            promise.catch(() => {
+              srcIdx++;
+              playCurrent();
+            });
+          }
+        } catch(e) {
+          srcIdx++;
+          playCurrent();
+        }
+      };
+
+      playCurrent();
     }
 
     function speakGerman(text, slow = false) {
       if (!text || !text.trim()) return;
       const cleanText = text.trim();
 
+      unlockAudioContext();
+
+      let webSpeechSuccess = false;
+
       if ("speechSynthesis" in window) {
         try {
-          window.speechSynthesis.cancel();
+          if (window.speechSynthesis.paused) {
+            window.speechSynthesis.resume();
+          }
+
           const utterance = new SpeechSynthesisUtterance(cleanText);
           utterance.lang = "de-DE";
           utterance.rate = slow ? 0.6 : 0.9;
@@ -527,29 +587,27 @@
           if (!germanVoice) loadGermanVoice();
           if (germanVoice) utterance.voice = germanVoice;
 
-          if (window.speechSynthesis.paused) {
-            window.speechSynthesis.resume();
-          }
-
-          let spoken = false;
-          utterance.onstart = () => { spoken = true; };
+          utterance.onstart = () => { webSpeechSuccess = true; };
           utterance.onerror = () => {
-            if (!spoken) fallbackAudioTTS(cleanText);
+            if (!webSpeechSuccess) playWebViewAudio(cleanText);
           };
 
           window.speechSynthesis.speak(utterance);
 
+          // Fast 220ms check for Android Appilix WebView silent speech handling
           setTimeout(() => {
-            if (!window.speechSynthesis.speaking && !spoken) {
-              fallbackAudioTTS(cleanText);
+            if (!webSpeechSuccess && (!window.speechSynthesis.speaking || window.speechSynthesis.pending)) {
+              playWebViewAudio(cleanText);
             }
-          }, 350);
+          }, 220);
+          return;
         } catch (e) {
-          fallbackAudioTTS(cleanText);
+          playWebViewAudio(cleanText);
+          return;
         }
-      } else {
-        fallbackAudioTTS(cleanText);
       }
+
+      playWebViewAudio(cleanText);
     }
     function createInitialData() {
       const today = todayStr();
